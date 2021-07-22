@@ -1,8 +1,10 @@
-GAME_TITLE  = "Shooting Game"
+GAME_TITLE = "Shooting Game"
 GAME_SCREEN = (1024, 512)
 
 WHITE   = (255, 255, 255)
 RED     = (255, 0, 0)
+
+REFRESH_RATE = 60
 
 # 객체 로딩 정보
 IMG_PATH="images"

@@ -8,6 +8,7 @@ from time import sleep
 from BKLOG import *
 from setting import *
 
+
 def drawScore(count):
     global gamepad
 
