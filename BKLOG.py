@@ -2,6 +2,7 @@ __author__ = "seraph92@gmail.com"
 # Logging Module
 
 import sys
+import os
 import logging
 
 LOG = logging.getLogger()
@@ -15,19 +16,20 @@ LOG.addHandler(stream_handler)
 
 def getCurFuncInfo(depth):
     # sys._getframe().f_lineno
-    fName = sys._getframe(depth).f_code.co_name
-    lName = sys._getframe(depth).f_lineno
-    return ( fName, lName )
+    fileName = os.path.basename(sys._getframe(depth).f_code.co_filename)
+    funcName = sys._getframe(depth).f_code.co_name
+    lineNum = sys._getframe(depth).f_lineno
+    return ( fileName, funcName, lineNum )
 
 def DEBUG(msg):
     #LOG.debug("[" + getCurFuncInfo(2) + "] " + msg)
-    LOG.debug("[%s:%d] "%getCurFuncInfo(2) + str(msg))
+    LOG.debug("[%s:%s:%d] "%getCurFuncInfo(2) + str(msg))
 
 def ERROR(msg):
-    LOG.error("[%s:%d] "%getCurFuncInfo(2) + str(msg))
+    LOG.error("[%s:%s:%d] "%getCurFuncInfo(2) + str(msg))
 
 def INFO(msg):
-    LOG.info("[%s:%d] "%getCurFuncInfo(2) + str(msg))
+    LOG.info("[%s:%s:%d] "%getCurFuncInfo(2) + str(msg))
 
 # log file handler
 #file_handler = logging.FileHandler('my.log')

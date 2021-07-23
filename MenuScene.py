@@ -1,58 +1,31 @@
 import pygame as pg
 from setting  import *
-
-from BKLOG import *
 from Background import *
-
+from BKLOG import *
 from Scenes import *
-from MenuScene import *
-from Stage1Scene import *
 
-class Game:
-    """
-    game class
-    """
-    #background = None
-    gamepad = None
-
-    def init(self):
+class MenuScene(Scene):
+    def __init__(self, name, gamepad):
         DEBUG("<< Enter")
-        #pygame.init()
-        DEBUG("PG_INIT : ")
-        pg.init()
-
-        #디스플레이 초기화
-        DEBUG("GAME_SCREEN : " + str(GAME_SCREEN))
-        self.gamepad = pg.display.set_mode(GAME_SCREEN)
-        DEBUG("GAME_TITLE : " + GAME_TITLE)
-        pg.display.set_caption(GAME_TITLE)
-
-        #게임 객체 로딩
+        Scene.__init__(self, name)
+        self.name = name
+        self.gamepad = gamepad
         #Background 로딩
         #self.bg = SlideLeftBackground()
-        # Scene 로딩
-        self.scenes = Scenes()
-        self.scenes.addScene("Home", MenuScene("Home", self.gamepad))
-        self.scenes.addScene("Stage1", Stage1Scene("Stage1", self.gamepad))
-        DEBUG("SCENES STATUS = [%s]"%self.scenes.status())
-        #Sound 로딩
         #Clock 초기화
-        #self.clock = pg.time.Clock()
+        self.clock = pg.time.Clock()
         DEBUG(" Exit>>")
 
-    def __init__(self):
+    def start(self):
         DEBUG("<< Enter")
-        self.init()
-        #scene = self.scenes.start("Home")
-        #DEBUG("SCENES STATUS = [%s]"%self.scenes.status())
-        #DEBUG("SCENE STATUS = [%s]"%scene.status())
-        nextScene = "Home"
-        while nextScene:
-            nextScene = self.scenes.start(nextScene)
-
-        DEBUG("SCENE STATUS = [%s]"%nextScene)
-        #self.event_loop()
+        DEBUG(">>>>>>>>>>>>>>>> [%s] Scene START >>>>>>>>>>>>>>>>"%(self.name))
+        #게임 객체 로딩
+        #Background 로딩
+        self.bg = MenuBackground()
+        #Event Loop 진입
+        nextScene = self.event_loop()
         DEBUG(" Exit>>")
+        return nextScene
 
     def event_loop(self):
         '''
@@ -93,7 +66,7 @@ class Game:
             # refresh rate 보정
             self.clock.tick(REFRESH_RATE)
 
+        nextScene = "Stage1"
         DEBUG(" Exit>>")
+        return nextScene
 
-if __name__ == '__main__':
-    Game()
