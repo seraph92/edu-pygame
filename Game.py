@@ -3,6 +3,7 @@ from setting  import *
 
 from BKLOG import *
 from Background import *
+from Scenes import *
 
 class Game:
     """
@@ -26,6 +27,11 @@ class Game:
         #게임 객체 로딩
         #Background 로딩
         self.bg = SlideLeftBackground()
+        # Scene 로딩
+        self.scenes = Scenes()
+        self.scenes.addScene("Home")
+        self.scenes.addScene("Stage1")
+        DEBUG("SCENES STATUS = [%s]"%self.scenes.status())
         #Sound 로딩
         #Clock 초기화
         self.clock = pg.time.Clock()
@@ -35,6 +41,7 @@ class Game:
     def __init__(self):
         DEBUG("<< Enter")
         self.init()
+        self.scenes.start("Home")
         self.event_loop()
         DEBUG(" Exit>>")
 

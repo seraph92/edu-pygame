@@ -95,6 +95,7 @@ class SlideLeftBackground(Background):
         # check recycle background
         for i, bg in enumerate(self.getBackgrounds()):
             bg.moveLeft(self.__tick)
+            # TO-DO :  [A]->[B]->[C] => [B]->[C]->[A] 가 될 수 있도록 수정 필요
             if bg.x + bg.width <= 0:
                 bg.setPosition(bg.width, 0)
         DEBUG(" Exit>>")
