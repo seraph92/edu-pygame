@@ -26,23 +26,26 @@ class Game:
 
         #게임 객체 로딩
         #Background 로딩
-        self.bg = SlideLeftBackground()
+        #self.bg = SlideLeftBackground()
         # Scene 로딩
         self.scenes = Scenes()
-        self.scenes.addScene("Home")
-        self.scenes.addScene("Stage1")
+        self.scenes.addScene("Home", MenuScene("Home", self.gamepad))
+        self.scenes.addScene("Stage1", Stage1Scene("Stage1", self.gamepad))
         DEBUG("SCENES STATUS = [%s]"%self.scenes.status())
         #Sound 로딩
         #Clock 초기화
-        self.clock = pg.time.Clock()
+        #self.clock = pg.time.Clock()
         DEBUG(" Exit>>")
-
 
     def __init__(self):
         DEBUG("<< Enter")
         self.init()
-        self.scenes.start("Home")
-        self.event_loop()
+        scene = self.scenes.start("Home")
+        DEBUG("SCENES STATUS = [%s]"%self.scenes.status())
+        #DEBUG("SCENE STATUS = [%s]"%scene.status())
+        scene = self.scenes.start("Stage1")
+        DEBUG("SCENE STATUS = [%s]"%scene.status())
+        #self.event_loop()
         DEBUG(" Exit>>")
 
     def event_loop(self):

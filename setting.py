@@ -10,6 +10,7 @@ REFRESH_RATE = 60
 IMG_PATH="images"
 BG_IMG_FILE={
     "background" : "background512.png",
+    "menu"       : "menu512.png",
 }
 
 OBJ_IMG_FILE={

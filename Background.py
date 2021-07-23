@@ -10,18 +10,18 @@ class BackgroundImage:
     Background Image
     '''
     #__backObjList: List[pg.Surface] = []
-    __backObjList = []
-    __image_name = ""
-    x = 0
-    y = 0
-    width = 0
-    height = 0
-
-    def __init__(self):
+    def __init__(self, imageId):
         DEBUG("<< Enter")
-        DEBUG('BG_IMG_FILE["background"] = [%s]'% BG_IMG_FILE["background"])
-        self.__image_name = BG_IMG_FILE["background"]
-        self.__backObjList.append(pg.image.load(IMG_PATH + '/' + BG_IMG_FILE["background"]))
+        self.__backObjList = []
+        self.__image_name = ""
+        self.x = 0
+        self.y = 0
+        self.width = 0
+        self.height = 0
+
+        DEBUG('BG_IMG_FILE[%s] = [%s]'% (imageId, BG_IMG_FILE[imageId]))
+        self.__image_name = BG_IMG_FILE[imageId]
+        self.__backObjList.append(pg.image.load(IMG_PATH + '/' + BG_IMG_FILE[imageId]))
         self.width  = self.__backObjList[0].get_width()
         self.height = self.__backObjList[0].get_height()
         DEBUG(" Exit>>")
@@ -45,29 +45,73 @@ class Background:
     Background
     """
     #__background: List[BackgroundImage]
-    __background = []
 
     def __init__(self):
         DEBUG("<< Enter")
-        self.__background.append(BackgroundImage())
-        self.__background.append(copy.deepcopy(self.__background[0]))
         DEBUG(" Exit>>")
 
-    def getBackground(self, index: int) -> BackgroundImage:
+    def status(self) -> str:
+        DEBUG("<< Enter")
+        DEBUG(" Exit>>")
+        return ""
+
+class MenuBackground(Background):
+    '''
+    Menu Background
+    '''
+ 
+    def __init__(self):
+        DEBUG("<< Enter")
+        self.__background = []
+        Background.__init__(self)
+        bgImage = BackgroundImage("menu")
+        self.addBackgroundImage(bgImage)
+
+        menu_back = self.getBackground(0)
+        DEBUG(" Exit>>")
+
+    def addBackgroundImage(self, image):
+        DEBUG("<< Enter")
+        self.__background.append(image)
+        DEBUG(" Exit>>")
+
+    def getBackground(self, index: int):
         DEBUG("index=[%s]"%index)
         return self.__background[index]
 
-    def getBackgrounds(self) -> [BackgroundImage]:
+    def getBackgrounds(self):
         return self.__background
 
-    def status(self) -> str:
+
+    def status(self):
         rt_str = ""
         for index, background in enumerate(self.__background):
             rt_str += background.status() + "\n"
 
         return rt_str
 
+    def applyMove(self):
+        DEBUG("<< Enter")
+        DEBUG("Menu Screen don't move!!")
+        # move all background
+        # check recycle background
+        DEBUG(" Exit>>")
 
+    def blit(self):
+        DEBUG("<< Enter")
+        for i, bg in enumerate(self.getBackgrounds()):
+            DEBUG("back_obj = [%s]"%(bg.status()))
+            back_obj = bg.getImageObj()
+            self.gamepad.blit(back_obj, (0, 0))
+        DEBUG(" Exit>>")
+
+
+    def update(self, gamepad):
+        DEBUG("<< Enter")
+        self.gamepad = gamepad
+        self.applyMove()
+        self.blit()
+        DEBUG(" Exit>>")
 
 class SlideLeftBackground(Background):
     '''
@@ -81,13 +125,35 @@ class SlideLeftBackground(Background):
     def __init__(self):
         DEBUG("<< Enter")
         Background.__init__(self)
+        self.__background = []
+        bgImage = BackgroundImage("background")
+        bgImage2 = BackgroundImage("background")
+        self.addBackgroundImage(bgImage)
+        self.addBackgroundImage(bgImage2)
+
         first_back = self.getBackground(0)
         second_back = self.getBackground(1)
         second_back.setPosition(first_back.width, 0)
         DEBUG(" Exit>>")
 
+    def addBackgroundImage(self, image):
+        DEBUG("<< Enter")
+        self.__background.append(image)
+        DEBUG(" Exit>>")
+
+    def getBackground(self, index: int):
+        DEBUG("index=[%s]"%index)
+        return self.__background[index]
+
+    def getBackgrounds(self):
+        return self.__background
+
     def status(self):
-        return "speed = [%d], refresh_rate=[%d], tick=[%d]"%(self.__speed, self.__rr, self.__tick) + "\n" + super().status()
+        rt_str = ""
+        for index, background in enumerate(self.__background):
+            rt_str += background.status() + "\n"
+
+        return "speed = [%d], refresh_rate=[%d], tick=[%d]"%(self.__speed, self.__rr, self.__tick) + "\n" + rt_str
 
     def applyMove(self):
         DEBUG("<< Enter")
@@ -107,7 +173,6 @@ class SlideLeftBackground(Background):
             DEBUG("back_obj = [%s]"%(bg.status()))
             self.gamepad.blit(back_obj, (bg.x, bg.y))
         DEBUG(" Exit>>")
-
 
     def update(self, gamepad):
         DEBUG("<< Enter")
