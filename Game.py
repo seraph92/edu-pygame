@@ -48,13 +48,14 @@ class Game:
         #DEBUG("SCENE STATUS = [%s]"%scene.status())
         nextScene = "Home"
         while nextScene:
-            nextScene = self.scenes.start(nextScene)
+            if nextScene:
+                nextScene = self.scenes.start(nextScene)
 
         DEBUG("SCENE STATUS = [%s]"%nextScene)
         #self.event_loop()
         DEBUG(" Exit>>")
 
-    def event_loop(self):
+    def event_loop(self):   #### 현재 사용하지 않음
         '''
         IF event.type == pygame.QUIT
             break

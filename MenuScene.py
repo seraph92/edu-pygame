@@ -4,8 +4,46 @@ from Background import *
 from BKLOG import *
 from Scenes import *
 
-import pygame_menu as pgm
-from pygame_menu.examples import create_example_window
+#import pygame_menu as pgm
+#from pygame_menu.examples import create_example_window
+
+class Button:
+    def __init__(self, text,  pos, font, bg="black", feedback=""):
+        DEBUG("<< Enter")
+        self.x, self.y = pos
+        self.font = pg.font.SysFont("Arial", font)
+        if feedback == "":
+            self.feedback = "text"
+        else:
+            self.feedback = feedback
+        self.change_text(text, bg)
+        DEBUG(" Exit>>")
+
+    def change_text(self, text, bg="black"):
+        DEBUG("<< Enter")
+        """Change the text when you click"""
+        self.text = self.font.render(text, 1, pg.Color("White"))
+        self.size = self.text.get_size()
+        self.surface = pg.Surface(self.size)
+        self.surface.fill(bg)
+        self.surface.blit(self.text, (0, 0))
+        self.rect = pg.Rect(self.x, self.y, self.size[0], self.size[1])
+        DEBUG(" Exit>>")
+ 
+    def show(self):
+        DEBUG("<< Enter")
+        screen.blit(button1.surface, (self.x, self.y))
+        DEBUG(" Exit>>")
+ 
+    def click(self, event):
+        DEBUG("<< Enter")
+        x, y = pg.mouse.get_pos()
+        if event.type == pg.MOUSEBUTTONDOWN:
+            if pg.mouse.get_pressed()[0]:
+                if self.rect.collidepoint(x, y):
+                    self.change_text(self.feedback, bg="red")
+        DEBUG(" Exit>>")
+
 
 class MenuScene(Scene):
     def __init__(self, name, gamepad):
@@ -13,6 +51,7 @@ class MenuScene(Scene):
         Scene.__init__(self, name)
         self.name = name
         self.gamepad = gamepad
+        self.nextScene = ""
         #Background 로딩
         #self.bg = SlideLeftBackground()
         #Clock 초기화
@@ -26,28 +65,9 @@ class MenuScene(Scene):
         #Background 로딩
         self.bg = MenuBackground()
         #Event Loop 진입
-        nextScene = self.event_loop()
+        self.nextScene = self.event_loop()
         DEBUG(" Exit>>")
-        return nextScene
-
-    def set_difficulty(selected, value):
-        """
-        Set the difficulty of the game.
-        :return: None
-        """
-        print('Set difficulty to {} ({})'.format(selected[0], value))
-
-    def start_the_game(self):
-        """
-        Function that starts a game. This is raised by the menu button,
-        here menu can be disabled, etc.
-        :return: None
-        """
-        self.user_name
-        print('{0}, Do the job here!'.format(self.user_name.get_value()))
-
-    def draw_background(self):
-        self.bg.update(self.gamepad)
+        return self.nextScene
 
     def event_loop(self):
         '''
@@ -67,22 +87,7 @@ class MenuScene(Scene):
         quit() # 종료
         '''
 
-        # surface = create_example_window('Example - Simple', (600, 400))
-
-        menu = pgm.Menu(
-          height=300,
-          theme=pgm.themes.THEME_BLUE,
-          title='Welcome',
-          width=400
-        )
-
-        user_name = menu.add.text_input('Name: ', default='John Doe', maxchar=10)
-        menu.add.selector('Difficulty: ', [('Hard', 1), ('Easy', 2)], onchange=self.set_difficulty)
-        menu.add.button('Play', self.start_the_game)
-        menu.add.button('Quit', pgm.events.EXIT)
-
         DEBUG("<< Enter")
-        '''
         OnGoing = True
         while OnGoing:
             for event in pg.event.get():
@@ -103,12 +108,7 @@ class MenuScene(Scene):
             # refresh rate 보정
             self.clock.tick(REFRESH_RATE)
 
-        '''
-        menu.mainloop(self.gamepad, self.draw_background)
-        #menu.mainloop(self.gamepad, self.draw_background, disable_loop=True, fps_limit=60)
-        #main_menu.mainloop(surface, main_background, disable_loop=test, fps_limit=FPS)
-
-        nextScene = "Stage1"
+        DEBUG("**********************goto next Scene = [%s]"%self.nextScene)
         DEBUG(" Exit>>")
-        return nextScene
+        return self.nextScene
 
