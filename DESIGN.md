@@ -26,3 +26,21 @@ EVENT LOOP
 
 게임초기화()
 EVENT LOOP()
+
+
+--> OOP
+Sprite instance 생성
+Sprite 객체를 그룹에 추가( 단 Player는 GroupSingle에 추가)
+Screent blit
+Score blit
+Player.draw
+Player.update
+Enemy.draw
+Enemy.update
+Collision판정
+pg.display.update()
+clock.tick(FPS)
+
+
+class Player(pg.sprite.Sprite):
+    __
