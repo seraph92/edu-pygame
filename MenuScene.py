@@ -7,6 +7,54 @@ from Scenes import *
 #import pygame_menu as pgm
 #from pygame_menu.examples import create_example_window
 
+class Board(pg.sprite.Sprite):
+    def __init__(self, x, y, width, height):
+        DEBUG("<< Enter")
+        super().__init__()
+        #board_img  = pg.image.load('').convert_alpha()
+        #board_img2 = pg.image.load('').convert_alpha()
+        self.board_img  = pg.Surface((width, height))
+        self.board_img2 = pg.Surface((width, height))
+        self.board_img.fill(RED)
+        self.board_img2.fill(WHITE)
+        self.board_imgs = [self.board_img, self.board_img2]
+        self.board_index = 0
+        #self.over_img = pg.image.load('').convert_alpha()
+
+        self.image = self.board_imgs[self.board_index]
+        self.rect  = self.image.get_rect(topleft = (x, y))
+
+        self.shadow = 2
+
+        #self.over_sound = pg.mixer.Sound('audio/boad_over.mp3')
+        #self.over_sound.set_volume(0.5)
+        DEBUG(" Exit>>")
+
+    def board_input(self):
+        DEBUG("<< Enter")
+        keys = pg.key.get_pressed()
+        if self.rect.collidepoint(pg.mouse.get_pos()):
+            if pg.mouse.get_pressed() == (1, 0, 0):
+                INFO("Mouse Button pressed!! ")
+            if keys[pg.K_SPACE]:
+                INFO("Space key pressed!! ")
+        DEBUG(" Exit>>")
+
+    def apply_shadow(self):
+        DEBUG("<< Enter")
+        DEBUG(" Exit>>")
+
+    def board_animation(self):
+        DEBUG("<< Enter")
+        DEBUG(" Exit>>")
+
+    def update(self):
+        DEBUG("<< Enter")
+        self.board_input()
+        self.apply_shadow()
+        self.board_animation()
+        DEBUG(" Exit>>")
+
 class Button:
     def __init__(self, text,  pos, font, bg="black", feedback=""):
         DEBUG("<< Enter")
@@ -62,6 +110,10 @@ class MenuScene(Scene):
         DEBUG("<< Enter")
         DEBUG(">>>>>>>>>>>>>>>> [%s] Scene START >>>>>>>>>>>>>>>>"%(self.name))
         #게임 객체 로딩
+        self.board = Board(0, 0, 400, 200)
+        #그룹분리
+        self.menu = pg.sprite.Group()
+        self.menu.add(self.board)
         #Background 로딩
         self.bg = MenuBackground()
         #Event Loop 진입
@@ -92,17 +144,23 @@ class MenuScene(Scene):
         while OnGoing:
             for event in pg.event.get():
                 if event.type == pg.QUIT:
-                    break
-                if event.type == pg.KEYDOWN:
-                    DEBUG("event.type=[%d], event.key=[%d]"%(event.type, event.key))
+                    OnGoing = False
+
+                #if event.type == pg.KEYDOWN:
+                #    DEBUG("event.type=[%d], event.key=[%d]"%(event.type, event.key))
                     #키보드 제어권 전달
-                    if event.key == pg.K_SPACE:
-                        OnGoing = False
+                #    if event.key == pg.K_SPACE:
+                #        OnGoing = False
+
+                #if event.type == pg.MOUSEBUTTONDOWN:
+                #    INFO("event.type=[%d], event.key=[%d]"%(event.type, event.key))
             # 배경 초기화
             self.gamepad.fill(WHITE)
             # 배경 그리기
             self.bg.update(self.gamepad)
             # 객체 그리기
+            self.menu.draw(self.gamepad)
+            self.menu.update()
             # 디스플레이 업데이트
             pg.display.update()
             # refresh rate 보정
@@ -112,3 +170,9 @@ class MenuScene(Scene):
         DEBUG(" Exit>>")
         return self.nextScene
 
+if __name__ == '__main__':
+    pg.init()
+    gamepad = pg.display.set_mode(GAME_SCREEN)
+    menuScene = MenuScene("menu", gamepad)
+    menuScene.start()
+    pg.quit()
