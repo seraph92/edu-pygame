@@ -10,10 +10,6 @@ BOTTOMLEFT=3
 BOTTOMRIGHT=4
 BODY=5
 
-
-#import pygame_menu as pgm
-#from pygame_menu.examples import create_example_window
-
 class Board(pg.sprite.Sprite):
     def __init__(self, x, y, width, height):
         DEBUG("<< Enter")
@@ -35,6 +31,12 @@ class Board(pg.sprite.Sprite):
 
         #self.over_sound = pg.mixer.Sound('audio/boad_over.mp3')
         #self.over_sound.set_volume(0.5)
+        DEBUG(" Exit>>")
+
+    def change_size(self, x, y, width, height):
+        DEBUG("<< Enter")
+        self.image = pg.transform.smoothscale(self.board_img, (width, height)) 
+        self.rect  = self.image.get_rect(topleft = (x, y))
         DEBUG(" Exit>>")
 
     def board_input(self):
@@ -98,7 +100,6 @@ class Button:
                 if self.rect.collidepoint(x, y):
                     self.change_text(self.feedback, bg="red")
         DEBUG(" Exit>>")
-
 
 class MenuScene(Scene):
     def __init__(self, name, gamepad):
@@ -166,7 +167,6 @@ class MenuScene(Scene):
                                 INFO("collision!!")
                                 self.drag_object = sprite
                                 mouse_x, mouse_y = event.pos
-
                                 mouse_rect = pg.Rect(mouse_x - 5, mouse_y - 5, 10, 10)
                                 # topleft check
                                 if   mouse_rect.collidepoint((sprite.rect.x, sprite.rect.y)):
@@ -201,52 +201,67 @@ class MenuScene(Scene):
                     #INFO("self.rectangle_draging = [{}]".format(self.rectangle_draging))
                     INFO("self.linedrag_mode = [{}]".format(self.linedrag_mode))
                     mouse_x, mouse_y = event.pos
-                    #if self.rectangle_draging:
-                    #    self.drag_object.rect.x = mouse_x + offset_x
-                    #    self.drag_object.rect.y = mouse_y + offset_y
                     if self.linedrag_mode:
-                        #offset_width  = self.drag_object.rect.x - ( mouse_x + offset_x )
-                        #offset_height = self.drag_object.rect.y - ( mouse_y + offset_y )
-                        #INFO("mouse_x       = [{}]".format(mouse_x))
-                        #INFO("mouse_y       = [{}]".format(mouse_y))
-                        #INFO("offset_x      = [{}]".format(offset_x))
-                        #INFO("offset_y      = [{}]".format(offset_y))
-                        #INFO("self.drag_object.rect.x = [{}]".format(self.drag_object.rect.x))
-                        #INFO("self.drag_object.rect.y = [{}]".format(self.drag_object.rect.y))
-                        #INFO("offset_width  = [{}]".format(offset_width))
-                        #INFO("offset_height = [{}]".format(offset_height))
                         if self.linedrag_mode == TOPLEFT:
-                            INFO("TOPLEFT")
-                            self.drag_object.rect.x      = mouse_x + offset_x
-                            self.drag_object.rect.y      = mouse_y + offset_y
-                            self.drag_object.rect.inflate_ip( offset_width, offset_height )
-                            #self.drag_object.rect.width  -= mouse_x + offset_x
-                            #self.drag_object.rect.height -= mouse_y + offset_y
+                            DEBUG("TOPLEFT")
+                            offset_width  = self.drag_object.rect.x - mouse_x
+                            offset_height = self.drag_object.rect.y - mouse_y
+
+                            DEBUG(f"[1]mouse_x  = [{mouse_x}]")
+                            DEBUG(f"[1]mouse_y  = [{mouse_y}]")
+                            DEBUG(f"[1]self.drag_object.rect.x  = [{self.drag_object.rect.x}]")
+                            DEBUG(f"[1]self.drag_object.rect.y  = [{self.drag_object.rect.y}]")
+                            DEBUG(f"[1]self.drag_object.rect.width   = [{self.drag_object.rect.width}]")
+                            DEBUG(f"[1]self.drag_object.rect.height  = [{self.drag_object.rect.height}]")
+                            DEBUG(f"[1]offset_width       = [{offset_width}]")
+                            DEBUG(f"[1]offset_height      = [{offset_height}]")
+
+                            self.drag_object.change_size(
+                                self.drag_object.rect.x, 
+                                self.drag_object.rect.y, 
+                                self.drag_object.rect.width  + offset_width, 
+                                self.drag_object.rect.height + offset_height
+                            )
+
+                            self.drag_object.rect.y      = mouse_y
+                            self.drag_object.rect.x      = mouse_x
                         elif self.linedrag_mode == TOPRIGHT:
-                            INFO("TOPRIGHT")
-                            #self.drag_object.rect.x      = mouse_x + offset_x
-                            self.drag_object.rect.y      = mouse_y + offset_y
-                            self.drag_object.rect.inflate_ip( -offset_width, offset_height )
-                            #self.drag_object.rect.width  -= mouse_x + offset_x
-                            #self.drag_object.rect.height -= mouse_y + offset_y
+                            DEBUG("TOPRIGHT")
+                            offset_width  = mouse_x - (self.drag_object.rect.x + self.drag_object.rect.width)
+                            offset_height = self.drag_object.rect.y - mouse_y
+
+                            self.drag_object.change_size(
+                                self.drag_object.rect.x, 
+                                self.drag_object.rect.y, 
+                                self.drag_object.rect.width  + offset_width, 
+                                self.drag_object.rect.height + offset_height
+                            )
+
+                            self.drag_object.rect.y      = mouse_y
                         elif self.linedrag_mode == BOTTOMLEFT:
-                            INFO("BOTTOMLEFT")
-                            self.drag_object.rect.x      = mouse_x + offset_x
-                            #self.drag_object.rect.y      = mouse_y + offset_y
-                            self.drag_object.rect.inflate_ip( offset_width, -offset_height )
-                            #self.drag_object.rect.width  -= mouse_x + offset_x
-                            #self.drag_object.rect.height -= mouse_y + offset_y
+                            DEBUG("BOTTOMLEFT")
+                            offset_width  = self.drag_object.rect.x - mouse_x
+                            offset_height = mouse_y - (self.drag_object.rect.y + self.drag_object.rect.height)
+
+                            self.drag_object.change_size(
+                                self.drag_object.rect.x, 
+                                self.drag_object.rect.y, 
+                                self.drag_object.rect.width  + offset_width, 
+                                self.drag_object.rect.height + offset_height
+                            )
+
+                            self.drag_object.rect.x      = mouse_x
                         elif self.linedrag_mode == BOTTOMRIGHT:
-                            INFO("BOTTOMRIGHT")
-                            offset_width  = self.drag_object.rect.x + self.drag_object.rect.width  - (mouse_x)
-                            offset_height = self.drag_object.rect.y + self.drag_object.rect.height - (mouse_y)
-                            #self.drag_object.rect.x      = mouse_x + offset_x
-                            #self.drag_object.rect.y      = mouse_y + offset_y
-                            INFO("offset_width       = [{}]".format(offset_width))
-                            INFO("offset_height      = [{}]".format(offset_height))
-                            self.drag_object.rect.inflate_ip( -offset_width, -offset_height )
-                            #self.drag_object.rect.width  -= mouse_x + offset_x
-                            #self.drag_object.rect.height -= mouse_y + offset_y
+                            DEBUG("BOTTOMRIGHT")
+                            offset_width  = mouse_x - (self.drag_object.rect.x + self.drag_object.rect.width )
+                            offset_height = mouse_y - (self.drag_object.rect.y + self.drag_object.rect.height)
+
+                            self.drag_object.change_size(
+                                self.drag_object.rect.x, 
+                                self.drag_object.rect.y, 
+                                self.drag_object.rect.width  + offset_width,    # mouse_x - self.drag_object.rect.x
+                                self.drag_object.rect.height + offset_height    # mouse_y - self.drag_object.rect.y
+                            )
                         elif self.linedrag_mode == BODY:
                             INFO("BODY_DRAG")
                             self.drag_object.rect.x = mouse_x + offset_x
