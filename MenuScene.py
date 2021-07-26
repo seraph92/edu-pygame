@@ -8,7 +8,11 @@ TOPLEFT=1
 TOPRIGHT=2
 BOTTOMLEFT=3
 BOTTOMRIGHT=4
-BODY=5
+LEFT=5
+RIGHT=6
+TOP=7
+BOTTOM=8
+BODY=10
 
 class Board(pg.sprite.Sprite):
     def __init__(self, x, y, width, height):
@@ -16,12 +20,15 @@ class Board(pg.sprite.Sprite):
         super().__init__()
         #board_img  = pg.image.load('').convert_alpha()
         #board_img2 = pg.image.load('').convert_alpha()
+        #self.font = pg.font.SysFont("Arial", 20)
+        self.font = pg.font.SysFont("굴림", 20)
         self.board_img  = pg.Surface((width, height))
         self.board_img2 = pg.Surface((width, height))
         self.board_img.fill(RED)
         self.board_img2.fill(WHITE)
         self.board_imgs = [self.board_img, self.board_img2]
         self.board_index = 0
+        self.text = ""
         #self.over_img = pg.image.load('').convert_alpha()
 
         self.image = self.board_imgs[self.board_index]
@@ -29,9 +36,20 @@ class Board(pg.sprite.Sprite):
 
         self.shadow = 2
 
+        self.change_text("한글이?")
+
         #self.over_sound = pg.mixer.Sound('audio/boad_over.mp3')
         #self.over_sound.set_volume(0.5)
         DEBUG(" Exit>>")
+
+    def change_text(self, text, bg="black"):
+        """Change the text whe you click"""
+        self.text = self.font.render(text, 1, pg.Color("White"))
+        self.size = self.text.get_size()
+        self.surface = pg.Surface(self.size)
+        #self.surface.fill(bg)
+        self.image.blit(self.text, (0, 0))
+        #self.rect = pg.Rect(self.x, self.y, self.size[0], self.size[1])
 
     def change_size(self, x, y, width, height):
         DEBUG("<< Enter")
@@ -185,6 +203,14 @@ class MenuScene(Scene):
                                     self.linedrag_mode = BOTTOMRIGHT
                                     offset_x = sprite.rect.x + sprite.rect.width - mouse_x
                                     offset_y = sprite.rect.y + sprite.rect.height - mouse_y
+                                elif (sprite.rect.x) < mouse_x < (sprite.rect.x + 5):
+                                    self.linedrag_mode = LEFT
+                                elif (sprite.rect.x + sprite.rect.width - 5) < mouse_x < (sprite.rect.x + sprite.rect.width):
+                                    self.linedrag_mode = RIGHT
+                                elif (sprite.rect.y) < mouse_y < (sprite.rect.y + 5):
+                                    self.linedrag_mode = TOP
+                                elif (sprite.rect.y + sprite.rect.height - 5) < mouse_y < (sprite.rect.y + sprite.rect.height):
+                                    self.linedrag_mode = BOTTOM
                                 else:
                                     self.linedrag_mode = BODY
                                     offset_x = sprite.rect.x - mouse_x
@@ -198,10 +224,38 @@ class MenuScene(Scene):
                         self.linedrag_mode = None
 
                 elif event.type == pg.MOUSEMOTION:
-                    #INFO("self.rectangle_draging = [{}]".format(self.rectangle_draging))
                     INFO("self.linedrag_mode = [{}]".format(self.linedrag_mode))
                     mouse_x, mouse_y = event.pos
-                    if self.linedrag_mode:
+                    if self.linedrag_mode == None:
+                        # Mouse Over 상황에서는 line drag를 할 수 있는 상황이면 마우스 커서의 모양을 바꾼다.
+                        sprites = self.menu.sprites()
+                        for sprite in sprites:
+                            if sprite.rect.collidepoint(event.pos):
+                                #self.drag_object = sprite
+                                mouse_x, mouse_y = event.pos
+                                mouse_rect = pg.Rect(mouse_x - 5, mouse_y - 5, 10, 10)
+                                # topleft check
+                                if   mouse_rect.collidepoint((sprite.rect.x, sprite.rect.y)):
+                                    pg.mouse.set_system_cursor(pg.SYSTEM_CURSOR_SIZENWSE)
+                                elif mouse_rect.collidepoint((sprite.rect.x + sprite.rect.width, sprite.rect.y)):
+                                    pg.mouse.set_system_cursor(pg.SYSTEM_CURSOR_SIZENESW)
+                                elif mouse_rect.collidepoint((sprite.rect.x, sprite.rect.y + sprite.rect.height)):
+                                    pg.mouse.set_system_cursor(pg.SYSTEM_CURSOR_SIZENESW)
+                                elif mouse_rect.collidepoint((sprite.rect.x + sprite.rect.width, sprite.rect.y + sprite.rect.height)):
+                                    pg.mouse.set_system_cursor(pg.SYSTEM_CURSOR_SIZENWSE)
+                                elif (sprite.rect.x) < mouse_x < (sprite.rect.x + 5):
+                                    pg.mouse.set_system_cursor(pg.SYSTEM_CURSOR_SIZEWE)
+                                elif (sprite.rect.x + sprite.rect.width - 5) < mouse_x < (sprite.rect.x + sprite.rect.width):
+                                    pg.mouse.set_system_cursor(pg.SYSTEM_CURSOR_SIZEWE)
+                                elif (sprite.rect.y) < mouse_y < (sprite.rect.y + 5):
+                                    pg.mouse.set_system_cursor(pg.SYSTEM_CURSOR_SIZENS)
+                                elif (sprite.rect.y + sprite.rect.height - 5) < mouse_y < (sprite.rect.y + sprite.rect.height):
+                                    pg.mouse.set_system_cursor(pg.SYSTEM_CURSOR_SIZENS)
+                                else:
+                                    pg.mouse.set_system_cursor(pg.SYSTEM_CURSOR_ARROW)
+                            else:
+                                pg.mouse.set_system_cursor(pg.SYSTEM_CURSOR_ARROW)
+                    else:
                         if self.linedrag_mode == TOPLEFT:
                             DEBUG("TOPLEFT")
                             offset_width  = self.drag_object.rect.x - mouse_x
@@ -261,6 +315,55 @@ class MenuScene(Scene):
                                 self.drag_object.rect.y, 
                                 self.drag_object.rect.width  + offset_width,    # mouse_x - self.drag_object.rect.x
                                 self.drag_object.rect.height + offset_height    # mouse_y - self.drag_object.rect.y
+                            )
+                        elif self.linedrag_mode == TOP:
+                            DEBUG("TOP")
+                            offset_width  = 0
+                            offset_height = self.drag_object.rect.y - mouse_y
+
+                            self.drag_object.change_size(
+                                self.drag_object.rect.x, 
+                                self.drag_object.rect.y, 
+                                self.drag_object.rect.width  + offset_width, 
+                                self.drag_object.rect.height + offset_height
+                            )
+
+                            self.drag_object.rect.y      = mouse_y
+                        elif self.linedrag_mode == BOTTOM:
+                            DEBUG("BOTTOM")
+                            offset_width  = 0
+                            offset_height = mouse_y - (self.drag_object.rect.y + self.drag_object.rect.height)
+
+                            self.drag_object.change_size(
+                                self.drag_object.rect.x, 
+                                self.drag_object.rect.y, 
+                                self.drag_object.rect.width  + offset_width, 
+                                self.drag_object.rect.height + offset_height
+                            )
+                        elif self.linedrag_mode == LEFT:
+                            DEBUG("LEFT")
+                            offset_width  = self.drag_object.rect.x - mouse_x
+                            offset_height = 0
+
+                            self.drag_object.change_size(
+                                self.drag_object.rect.x, 
+                                self.drag_object.rect.y, 
+                                self.drag_object.rect.width  + offset_width, 
+                                self.drag_object.rect.height + offset_height
+                            )
+
+                            self.drag_object.rect.x      = mouse_x
+                        elif self.linedrag_mode == RIGHT:
+                            DEBUG("RIGHT")
+                            INFO(f"mouse_x = [{mouse_x}] , self.drag_object.rect.x = [{self.drag_object.rect.x}]")
+                            offset_width  = mouse_x - (self.drag_object.rect.x + self.drag_object.rect.width)
+                            offset_height = 0
+
+                            self.drag_object.change_size(
+                                self.drag_object.rect.x, 
+                                self.drag_object.rect.y, 
+                                self.drag_object.rect.width  + offset_width, 
+                                self.drag_object.rect.height + offset_height
                             )
                         elif self.linedrag_mode == BODY:
                             INFO("BODY_DRAG")
