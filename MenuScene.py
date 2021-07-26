@@ -4,6 +4,13 @@ from Background import *
 from BKLOG import *
 from Scenes import *
 
+TOPLEFT=1
+TOPRIGHT=2
+BOTTOMLEFT=3
+BOTTOMRIGHT=4
+BODY=5
+
+
 #import pygame_menu as pgm
 #from pygame_menu.examples import create_example_window
 
@@ -100,6 +107,8 @@ class MenuScene(Scene):
         self.name = name
         self.gamepad = gamepad
         self.nextScene = ""
+        self.rectangle_draging = None
+        self.linedrag_mode = None
         #Background 로딩
         #self.bg = SlideLeftBackground()
         #Clock 초기화
@@ -145,6 +154,103 @@ class MenuScene(Scene):
             for event in pg.event.get():
                 if event.type == pg.QUIT:
                     OnGoing = False
+                elif event.type == pg.MOUSEBUTTONDOWN:
+                    INFO("MOUSEBOTTONDOWN")
+                    if event.button == 1:            
+                        sprites = self.menu.sprites()
+                        for sprite in sprites:
+                            INFO("sprite founded!!")
+                            INFO("sprite.rect = [{}]".format(sprite.rect))
+                            INFO("eventpos = [{}]".format(event.pos))
+                            if sprite.rect.collidepoint(event.pos):
+                                INFO("collision!!")
+                                self.drag_object = sprite
+                                mouse_x, mouse_y = event.pos
+
+                                mouse_rect = pg.Rect(mouse_x - 5, mouse_y - 5, 10, 10)
+                                # topleft check
+                                if   mouse_rect.collidepoint((sprite.rect.x, sprite.rect.y)):
+                                    self.linedrag_mode = TOPLEFT
+                                    offset_x = sprite.rect.x - mouse_x
+                                    offset_y = sprite.rect.y - mouse_y
+                                elif mouse_rect.collidepoint((sprite.rect.x + sprite.rect.width, sprite.rect.y)):
+                                    self.linedrag_mode = TOPRIGHT
+                                    offset_x = sprite.rect.x + sprite.rect.width - mouse_x
+                                    offset_y = sprite.rect.y - mouse_y
+                                elif mouse_rect.collidepoint((sprite.rect.x, sprite.rect.y + sprite.rect.height)):
+                                    self.linedrag_mode = BOTTOMLEFT
+                                    offset_x = sprite.rect.x - mouse_x
+                                    offset_y = sprite.rect.y + sprite.rect.height - mouse_y
+                                elif mouse_rect.collidepoint((sprite.rect.x + sprite.rect.width, sprite.rect.y + sprite.rect.height)):
+                                    self.linedrag_mode = BOTTOMRIGHT
+                                    offset_x = sprite.rect.x + sprite.rect.width - mouse_x
+                                    offset_y = sprite.rect.y + sprite.rect.height - mouse_y
+                                else:
+                                    self.linedrag_mode = BODY
+                                    offset_x = sprite.rect.x - mouse_x
+                                    offset_y = sprite.rect.y - mouse_y
+                                    #self.rectangle_draging = True
+                                break
+                elif event.type == pg.MOUSEBUTTONUP:
+                    if event.button == 1:            
+                        #self.rectangle_draging = False
+                        self.drag_object = None
+                        self.linedrag_mode = None
+
+                elif event.type == pg.MOUSEMOTION:
+                    #INFO("self.rectangle_draging = [{}]".format(self.rectangle_draging))
+                    INFO("self.linedrag_mode = [{}]".format(self.linedrag_mode))
+                    mouse_x, mouse_y = event.pos
+                    #if self.rectangle_draging:
+                    #    self.drag_object.rect.x = mouse_x + offset_x
+                    #    self.drag_object.rect.y = mouse_y + offset_y
+                    if self.linedrag_mode:
+                        #offset_width  = self.drag_object.rect.x - ( mouse_x + offset_x )
+                        #offset_height = self.drag_object.rect.y - ( mouse_y + offset_y )
+                        #INFO("mouse_x       = [{}]".format(mouse_x))
+                        #INFO("mouse_y       = [{}]".format(mouse_y))
+                        #INFO("offset_x      = [{}]".format(offset_x))
+                        #INFO("offset_y      = [{}]".format(offset_y))
+                        #INFO("self.drag_object.rect.x = [{}]".format(self.drag_object.rect.x))
+                        #INFO("self.drag_object.rect.y = [{}]".format(self.drag_object.rect.y))
+                        #INFO("offset_width  = [{}]".format(offset_width))
+                        #INFO("offset_height = [{}]".format(offset_height))
+                        if self.linedrag_mode == TOPLEFT:
+                            INFO("TOPLEFT")
+                            self.drag_object.rect.x      = mouse_x + offset_x
+                            self.drag_object.rect.y      = mouse_y + offset_y
+                            self.drag_object.rect.inflate_ip( offset_width, offset_height )
+                            #self.drag_object.rect.width  -= mouse_x + offset_x
+                            #self.drag_object.rect.height -= mouse_y + offset_y
+                        elif self.linedrag_mode == TOPRIGHT:
+                            INFO("TOPRIGHT")
+                            #self.drag_object.rect.x      = mouse_x + offset_x
+                            self.drag_object.rect.y      = mouse_y + offset_y
+                            self.drag_object.rect.inflate_ip( -offset_width, offset_height )
+                            #self.drag_object.rect.width  -= mouse_x + offset_x
+                            #self.drag_object.rect.height -= mouse_y + offset_y
+                        elif self.linedrag_mode == BOTTOMLEFT:
+                            INFO("BOTTOMLEFT")
+                            self.drag_object.rect.x      = mouse_x + offset_x
+                            #self.drag_object.rect.y      = mouse_y + offset_y
+                            self.drag_object.rect.inflate_ip( offset_width, -offset_height )
+                            #self.drag_object.rect.width  -= mouse_x + offset_x
+                            #self.drag_object.rect.height -= mouse_y + offset_y
+                        elif self.linedrag_mode == BOTTOMRIGHT:
+                            INFO("BOTTOMRIGHT")
+                            offset_width  = self.drag_object.rect.x + self.drag_object.rect.width  - (mouse_x)
+                            offset_height = self.drag_object.rect.y + self.drag_object.rect.height - (mouse_y)
+                            #self.drag_object.rect.x      = mouse_x + offset_x
+                            #self.drag_object.rect.y      = mouse_y + offset_y
+                            INFO("offset_width       = [{}]".format(offset_width))
+                            INFO("offset_height      = [{}]".format(offset_height))
+                            self.drag_object.rect.inflate_ip( -offset_width, -offset_height )
+                            #self.drag_object.rect.width  -= mouse_x + offset_x
+                            #self.drag_object.rect.height -= mouse_y + offset_y
+                        elif self.linedrag_mode == BODY:
+                            INFO("BODY_DRAG")
+                            self.drag_object.rect.x = mouse_x + offset_x
+                            self.drag_object.rect.y = mouse_y + offset_y
 
                 #if event.type == pg.KEYDOWN:
                 #    DEBUG("event.type=[%d], event.key=[%d]"%(event.type, event.key))
