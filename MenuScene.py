@@ -23,50 +23,80 @@ class TextBox(pg.sprite.DirtySprite):
         DEBUG("<< Enter")
         super().__init__()
         self.text = "TextBox 한글"
-        #self.font = pg.font.SysFont("malgungothic", 20)
-        self.font = pygame.freetype.SysFont("malgungothic", 40)
+        self.font_name = "malgungothic"
+        self.font_size = 80
         self.color = pg.Color("White")
-        #self.color = pg.Color("Blue")
+
+        self.font = pygame.freetype.SysFont(self.font_name, self.font_size)
 
         ( self.text_image, self.text_rect ) = self.font.render(self.text, self.color)
         INFO(f"self.text_image = [{self.text_image}]")
         INFO(f"type of self.text_image = [{type(self.text_image)}]")
-         
-
-        #self.image = pg.Surface((self.text_rect.width, self.text_rect.height))
-        #self.rect  = self.image.get_rect(topleft = (x, y))
 
         self.image = pg.Surface([self.text_rect.width, self.text_rect.height], pg.SRCALPHA, 32)
         self.image = self.image.convert_alpha()
         self.image.blit(self.text_image, (0, 0))
         self.rect  = self.image.get_rect()
-
-        #self.image = pg.Surface((self.text_rect.width, self.text_rect.height))
-        #self.rect  = self.image.get_rect(topleft = (x, y))
-        #self.image = self.text_image
-        #self.rect  = self.text_rect
-
-        #self.image.blit(self.text_image, (0, 0))
-        #self.surface.fill(bg)
+        self.rel_width  = self.rect.width
+        self.rel_height = self.rect.height
         DEBUG(" Exit>>")
 
-    def change_text(self, text, bg="black"):
+    def change_font(self, font_name):
+        self.font_name = font_name
+
+    def change_text(self, text):
         """Change the text whe you click"""
-        self.image = self.font.render(text, 1, pg.Color("White"))
-        self.rect = self.image.get_rect(topleft = (0, 0))
-        #self.image.blit(self.text, (0, 0))
-        #self.rect = pg.Rect(self.x, self.y, self.size[0], self.size[1])
+        self.text = text
+        self.font = pygame.freetype.SysFont(self.font_name, self.font_size)
+        ( self.text_image, self.text_rect ) = self.font.render(self.text, self.color)
+        
+        self.image = pg.transform.smoothscale(self.text_image, (self.rel_width, self.rel_height))
+        self.rect  = self.image.get_rect(topleft = (self.rect.x, self.rect.y))
 
     def change_size(self, x, y, width, height):
         DEBUG("<< Enter")
-        #self.image = pg.transform.smoothscale(self.image, (width, height)) 
-        self.image = pg.transform.scale(self.image, (width, height)) 
+        self.rel_x = x
+        self.rel_y = y
+
+        if width  < 1: width  = 0
+        if height < 1: height = 0
+        
+        self.rel_width  = width
+        self.rel_height = height
+
+        self.image = pg.transform.smoothscale(self.text_image, (width, height)) 
         self.rect  = self.image.get_rect(topleft = (x, y))
+        self.rect.x = x
+        self.rect.y = y
+        self.rect.width  = width
+        self.rect.height = height
+        DEBUG(" Exit>>")
+
+    def board_input(self):
+        DEBUG("<< Enter")
+        keys = pg.key.get_pressed()
+        if self.rect.collidepoint(pg.mouse.get_pos()):
+            if pg.mouse.get_pressed() == (1, 0, 0):
+                INFO("Mouse Button pressed!! ")
+                self.change_text("마우스 눌렀어.")
+            if keys[pg.K_SPACE]:
+                INFO("Space key pressed!! ")
+        DEBUG(" Exit>>")
+
+    def apply_shadow(self):
+        DEBUG("<< Enter")
+        DEBUG(" Exit>>")
+
+    def board_animation(self):
+        DEBUG("<< Enter")
         DEBUG(" Exit>>")
 
     def update(self):
         DEBUG("<< Enter")
         self.dirty = 1
+        self.board_input()
+        self.apply_shadow()
+        self.board_animation()
         DEBUG(" Exit>>")
 
 class Board(pg.sprite.DirtySprite):
@@ -107,6 +137,8 @@ class Board(pg.sprite.DirtySprite):
     def change_size(self, x, y, width, height):
         DEBUG("<< Enter")
         #self.image = pg.transform.smoothscale(self.image, (width, height)) 
+        if width  < 1: width  = 0
+        if height < 1: height = 0
         self.image = pg.transform.smoothscale(self.board_img, (width, height)) 
         self.rect  = self.image.get_rect(topleft = (x, y))
         DEBUG(" Exit>>")
