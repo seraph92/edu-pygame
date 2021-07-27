@@ -1,4 +1,5 @@
 import pygame as pg
+import pygame.freetype
 from setting  import *
 from Background import *
 from BKLOG import *
@@ -17,15 +18,35 @@ BODY=10
 EDIT_MODE=True
 #EDIT_MODE=False
 
-class TextBox(pg.sprite.Sprite):
+class TextBox(pg.sprite.DirtySprite):
     def __init__(self, x, y, width, height):
         DEBUG("<< Enter")
         super().__init__()
-        self.text = "TextBox"
-        self.font = pg.font.SysFont("굴림", 20)
-        self.image = self.font.render(self.text, 1, pg.Color("White"))
-        self.rect  = self.image.get_rect(topleft = (x, y))
-        #self.surface = pg.Surface(self.size)
+        self.text = "TextBox 한글"
+        #self.font = pg.font.SysFont("malgungothic", 20)
+        self.font = pygame.freetype.SysFont("malgungothic", 40)
+        self.color = pg.Color("White")
+        #self.color = pg.Color("Blue")
+
+        ( self.text_image, self.text_rect ) = self.font.render(self.text, self.color)
+        INFO(f"self.text_image = [{self.text_image}]")
+        INFO(f"type of self.text_image = [{type(self.text_image)}]")
+         
+
+        #self.image = pg.Surface((self.text_rect.width, self.text_rect.height))
+        #self.rect  = self.image.get_rect(topleft = (x, y))
+
+        self.image = pg.Surface([self.text_rect.width, self.text_rect.height], pg.SRCALPHA, 32)
+        self.image = self.image.convert_alpha()
+        self.image.blit(self.text_image, (0, 0))
+        self.rect  = self.image.get_rect()
+
+        #self.image = pg.Surface((self.text_rect.width, self.text_rect.height))
+        #self.rect  = self.image.get_rect(topleft = (x, y))
+        #self.image = self.text_image
+        #self.rect  = self.text_rect
+
+        #self.image.blit(self.text_image, (0, 0))
         #self.surface.fill(bg)
         DEBUG(" Exit>>")
 
@@ -38,15 +59,17 @@ class TextBox(pg.sprite.Sprite):
 
     def change_size(self, x, y, width, height):
         DEBUG("<< Enter")
-        self.image = pg.transform.smoothscale(self.image, (width, height)) 
+        #self.image = pg.transform.smoothscale(self.image, (width, height)) 
+        self.image = pg.transform.scale(self.image, (width, height)) 
         self.rect  = self.image.get_rect(topleft = (x, y))
         DEBUG(" Exit>>")
 
     def update(self):
         DEBUG("<< Enter")
+        self.dirty = 1
         DEBUG(" Exit>>")
 
-class Board(pg.sprite.Sprite):
+class Board(pg.sprite.DirtySprite):
     def __init__(self, x, y, width, height):
         DEBUG("<< Enter")
         super().__init__()
@@ -108,6 +131,7 @@ class Board(pg.sprite.Sprite):
 
     def update(self):
         DEBUG("<< Enter")
+        self.dirty = 1
         self.board_input()
         self.apply_shadow()
         self.board_animation()
@@ -223,7 +247,7 @@ class MenuScene(Scene):
                         INFO("MOUSEBOTTONDOWN")
                         if event.button == 1:            
                             sprites = self.allObjGroup.sprites()
-                            for sprite in sprites:
+                            for sprite in reversed(sprites):
                                 INFO("sprite founded!!")
                                 INFO("sprite.rect = [{}]".format(sprite.rect))
                                 INFO("eventpos = [{}]".format(event.pos))
@@ -278,35 +302,53 @@ class MenuScene(Scene):
                         if self.linedrag_mode == None:
                             # Mouse Over 상황에서는 line drag를 할 수 있는 상황이면 마우스 커서의 모양을 바꾼다.
                             sprites = self.allObjGroup.sprites()
-                            for sprite in sprites:
+                            for sprite in reversed(sprites):
                                 if sprite.rect.collidepoint(event.pos):
+                                    INFO(f"Motion Collisiton detected!!")
                                     #self.drag_object = sprite
                                     mouse_x, mouse_y = event.pos
                                     mouse_rect = pg.Rect(mouse_x - 5, mouse_y - 5, 10, 10)
                                     # topleft check
                                     if   mouse_rect.collidepoint((sprite.rect.x, sprite.rect.y)):
-                                        pg.mouse.set_system_cursor(pg.SYSTEM_CURSOR_SIZENWSE)
+                                        INFO(f"Drag Mouse Cursor = 11h")
+                                        #pg.mouse.set_system_cursor(pg.SYSTEM_CURSOR_SIZENWSE)
+                                        pg.mouse.set_cursor(pg.SYSTEM_CURSOR_SIZENWSE)
                                     elif mouse_rect.collidepoint((sprite.rect.x + sprite.rect.width, sprite.rect.y)):
-                                        pg.mouse.set_system_cursor(pg.SYSTEM_CURSOR_SIZENESW)
+                                        INFO(f"Drag Mouse Cursor = 1h")
+                                        #pg.mouse.set_system_cursor(pg.SYSTEM_CURSOR_SIZENESW)
+                                        pg.mouse.set_cursor(pg.SYSTEM_CURSOR_SIZENESW)
                                     elif mouse_rect.collidepoint((sprite.rect.x, sprite.rect.y + sprite.rect.height)):
-                                        pg.mouse.set_system_cursor(pg.SYSTEM_CURSOR_SIZENESW)
+                                        INFO(f"Drag Mouse Cursor = 7h")
+                                        #pg.mouse.set_system_cursor(pg.SYSTEM_CURSOR_SIZENESW)
+                                        pg.mouse.set_cursor(pg.SYSTEM_CURSOR_SIZENESW)
                                     elif mouse_rect.collidepoint((sprite.rect.x + sprite.rect.width, sprite.rect.y + sprite.rect.height)):
-                                        pg.mouse.set_system_cursor(pg.SYSTEM_CURSOR_SIZENWSE)
+                                        INFO(f"Drag Mouse Cursor = 5h")
+                                        #pg.mouse.set_system_cursor(pg.SYSTEM_CURSOR_SIZENWSE)
+                                        pg.mouse.set_cursor(pg.SYSTEM_CURSOR_SIZENWSE)
                                     elif (sprite.rect.x) < mouse_x < (sprite.rect.x + 5):
-                                        pg.mouse.set_system_cursor(pg.SYSTEM_CURSOR_SIZEWE)
+                                        INFO(f"Drag Mouse Cursor = 9h")
+                                        #pg.mouse.set_system_cursor(pg.SYSTEM_CURSOR_SIZEWE)
+                                        pg.mouse.set_cursor(pg.SYSTEM_CURSOR_SIZEWE)
                                     elif (sprite.rect.x + sprite.rect.width - 5) < mouse_x < (sprite.rect.x + sprite.rect.width):
-                                        pg.mouse.set_system_cursor(pg.SYSTEM_CURSOR_SIZEWE)
+                                        INFO(f"Drag Mouse Cursor = 3h")
+                                        #pg.mouse.set_system_cursor(pg.SYSTEM_CURSOR_SIZEWE)
+                                        pg.mouse.set_cursor(pg.SYSTEM_CURSOR_SIZEWE)
                                     elif (sprite.rect.y) < mouse_y < (sprite.rect.y + 5):
-                                        pg.mouse.set_system_cursor(pg.SYSTEM_CURSOR_SIZENS)
+                                        INFO(f"Drag Mouse Cursor = 12h")
+                                        #pg.mouse.set_system_cursor(pg.SYSTEM_CURSOR_SIZENS)
+                                        pg.mouse.set_cursor(pg.SYSTEM_CURSOR_SIZENS)
                                     elif (sprite.rect.y + sprite.rect.height - 5) < mouse_y < (sprite.rect.y + sprite.rect.height):
-                                        pg.mouse.set_system_cursor(pg.SYSTEM_CURSOR_SIZENS)
+                                        INFO(f"Drag Mouse Cursor = 6h")
+                                        #pg.mouse.set_system_cursor(pg.SYSTEM_CURSOR_SIZENS)
+                                        pg.mouse.set_cursor(pg.SYSTEM_CURSOR_SIZENS)
                                     else:
                                         #expected_cursor = pygame.cursors.Cursor(size, hotspot, xormask, andmask)
                                         #pygame.mouse.set_cursor(expected_cursor)
-                                        #pg.cursors
-                                        pg.mouse.set_system_cursor(pg.SYSTEM_CURSOR_ARROW)
+                                        # body grab
+                                        pg.mouse.set_cursor(pg.SYSTEM_CURSOR_ARROW)
+                                    break
                                 else:
-                                    pg.mouse.set_system_cursor(pg.SYSTEM_CURSOR_ARROW)
+                                    pg.mouse.set_cursor(pg.SYSTEM_CURSOR_ARROW)
                         else:
                             if self.linedrag_mode == TOPLEFT:
                                 DEBUG("TOPLEFT")
