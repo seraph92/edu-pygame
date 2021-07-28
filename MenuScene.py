@@ -5,6 +5,8 @@ from Background import *
 from BKLOG import *
 from Scenes import *
 
+import typing
+
 TOPLEFT=1
 TOPRIGHT=2
 BOTTOMLEFT=3
@@ -18,11 +20,11 @@ BODY=10
 EDIT_MODE=True
 #EDIT_MODE=False
 
-class TextBox(pg.sprite.DirtySprite):
+class Label(pg.sprite.DirtySprite):
     def __init__(self, x, y, width, height):
         DEBUG("<< Enter")
         super().__init__()
-        self.text = "TextBox 한글"
+        self.text = "Label 한글"
         self.font_name = "malgungothic"
         self.font_size = 80
         self.color = pg.Color("White")
@@ -99,6 +101,66 @@ class TextBox(pg.sprite.DirtySprite):
         self.board_animation()
         DEBUG(" Exit>>")
 
+class Button(pg.sprite.DirtySprite):
+    def __init__(self, text,  pos, bg="black", feedback=""):
+        DEBUG("<< Enter")
+        super().__init__()
+        self.text = "Button 한글"
+        self.font_name = "malgungothic"
+        self.font_size = 40
+        self.color = pg.Color("White")
+        self.x, self.y = pos
+
+        self.font = pygame.freetype.SysFont(self.font_name, self.font_size)
+
+        ( self.text_image, self.text_rect ) = self.font.render(self.text, self.color)
+        INFO(f"self.text_image = [{self.text_image}]")
+        INFO(f"type of self.text_image = [{type(self.text_image)}]")
+
+        self.image = pg.Surface([self.text_rect.width, self.text_rect.height], pg.SRCALPHA, 32)
+        self.image = self.image.convert_alpha()
+        self.image.fill(bg)
+        self.image.blit(self.text_image, (0, 0))
+        self.rect  = self.image.get_rect()
+        self.rel_width  = self.rect.width
+        self.rel_height = self.rect.height
+
+        if feedback == "":
+            self.feedback = "text"
+        else:
+            self.feedback = feedback
+        #self.change_text(text, bg)
+        DEBUG(" Exit>>")
+
+    def change_text(self, text, bg="black"):
+        DEBUG("<< Enter")
+        """Change the text when you click"""
+        self.text = text
+        self.font = pygame.freetype.SysFont(self.font_name, self.font_size)
+        ( self.text_image, self.text_rect ) = self.font.render(self.text, self.color)
+        
+        self.image = pg.Surface([self.rect.width, self.rect.height], pg.SRCALPHA, 32)
+        self.image = self.image.convert_alpha()
+        self.image.fill(bg)
+        self.image.blit(self.text_image, (0, 0))
+        self.rect  = self.image.get_rect()
+        DEBUG(" Exit>>")
+ 
+    def show(self):
+        DEBUG("<< Enter")
+        #screen.blit(button1.surface, (self.x, self.y))
+        DEBUG(" Exit>>")
+ 
+    def click(self, event):
+        DEBUG("<< Enter")
+        x, y = pg.mouse.get_pos()
+        if event.type == pg.MOUSEBUTTONDOWN:
+            if pg.mouse.get_pressed()[0]:
+                if self.rect.collidepoint(x, y):
+                    self.change_text(self.feedback, bg="red")
+        DEBUG(" Exit>>")
+
+
 class Board(pg.sprite.DirtySprite):
     def __init__(self, x, y, width, height):
         DEBUG("<< Enter")
@@ -169,42 +231,6 @@ class Board(pg.sprite.DirtySprite):
         self.board_animation()
         DEBUG(" Exit>>")
 
-class Button:
-    def __init__(self, text,  pos, font, bg="black", feedback=""):
-        DEBUG("<< Enter")
-        self.x, self.y = pos
-        self.font = pg.font.SysFont("Arial", font)
-        if feedback == "":
-            self.feedback = "text"
-        else:
-            self.feedback = feedback
-        self.change_text(text, bg)
-        DEBUG(" Exit>>")
-
-    def change_text(self, text, bg="black"):
-        DEBUG("<< Enter")
-        """Change the text when you click"""
-        self.text = self.font.render(text, 1, pg.Color("White"))
-        self.size = self.text.get_size()
-        self.surface = pg.Surface(self.size)
-        self.surface.fill(bg)
-        self.surface.blit(self.text, (0, 0))
-        self.rect = pg.Rect(self.x, self.y, self.size[0], self.size[1])
-        DEBUG(" Exit>>")
- 
-    def show(self):
-        DEBUG("<< Enter")
-        screen.blit(button1.surface, (self.x, self.y))
-        DEBUG(" Exit>>")
- 
-    def click(self, event):
-        DEBUG("<< Enter")
-        x, y = pg.mouse.get_pos()
-        if event.type == pg.MOUSEBUTTONDOWN:
-            if pg.mouse.get_pressed()[0]:
-                if self.rect.collidepoint(x, y):
-                    self.change_text(self.feedback, bg="red")
-        DEBUG(" Exit>>")
 
 class MenuScene(Scene):
     def __init__(self, name, gamepad):
@@ -227,13 +253,15 @@ class MenuScene(Scene):
         #게임 객체 로딩
         self.board = Board(0, 0, 400, 200)
         self.font_board = Board( 722, 2, 300, 500)
-        self.text_box = TextBox( 0, 0, 300, 500)
+        self.text_box = Label( 0, 0, 300, 500)
+        self.button = Button("Button버튼", (50, 100))
         #그룹분리
         ## 전체 그룹에 추가
         self.allObjGroup = pg.sprite.Group()
         self.allObjGroup.add(self.board)
         self.allObjGroup.add(self.font_board)
         self.allObjGroup.add(self.text_box)
+        self.allObjGroup.add(self.button)
 
         for font in pg.font.get_fonts():
             INFO(f"font[{font}]")
