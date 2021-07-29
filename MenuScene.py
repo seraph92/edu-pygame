@@ -1,5 +1,7 @@
 import pygame as pg
 import pygame.freetype
+import pygame.gfxdraw
+
 from setting  import *
 from Background import *
 from BKLOG import *
@@ -21,12 +23,12 @@ EDIT_MODE=True
 #EDIT_MODE=False
 
 class Label(pg.sprite.DirtySprite):
-    def __init__(self, x, y, width, height):
+    def __init__(self, text, pos):
         DEBUG("<< Enter")
         super().__init__()
-        self.text = "Label 한글"
+        self.text = text
         self.font_name = "malgungothic"
-        self.font_size = 80
+        self.font_size = 30
         self.color = pg.Color("White")
 
         self.font = pygame.freetype.SysFont(self.font_name, self.font_size)
@@ -39,6 +41,9 @@ class Label(pg.sprite.DirtySprite):
         self.image = self.image.convert_alpha()
         self.image.blit(self.text_image, (0, 0))
         self.rect  = self.image.get_rect()
+
+        self.rect.x, self.rect.y = pos
+
         self.rel_width  = self.rect.width
         self.rel_height = self.rect.height
         DEBUG(" Exit>>")
@@ -105,23 +110,35 @@ class Button(pg.sprite.DirtySprite):
     def __init__(self, text,  pos, bg="black", feedback=""):
         DEBUG("<< Enter")
         super().__init__()
-        self.text = "Button 한글"
+        self.text = text
         self.font_name = "malgungothic"
-        self.font_size = 40
+        self.font_size = 30
         self.color = pg.Color("White")
         self.x, self.y = pos
 
         self.font = pygame.freetype.SysFont(self.font_name, self.font_size)
 
+        ( tmp_image, tmp_rect ) = self.font.render("밝", self.color)
+        one_width  = int(tmp_rect.width * 1.36)
+        one_height = int(tmp_rect.height * 1.83)
+
+        self.margin_width = one_width
+        self.margin_height = (one_height -tmp_rect.height) // 2
+
         ( self.text_image, self.text_rect ) = self.font.render(self.text, self.color)
+
         INFO(f"self.text_image = [{self.text_image}]")
         INFO(f"type of self.text_image = [{type(self.text_image)}]")
 
-        self.image = pg.Surface([self.text_rect.width, self.text_rect.height], pg.SRCALPHA, 32)
+        self.image = pg.Surface([self.text_rect.width + (self.margin_width*2), self.text_rect.height + (self.margin_height*2)], pg.SRCALPHA, 32)
         self.image = self.image.convert_alpha()
-        self.image.fill(bg)
-        self.image.blit(self.text_image, (0, 0))
         self.rect  = self.image.get_rect()
+        self.rect.x, self.rect.y = pos
+
+        self.draw_rounded_rect(self.image, pg.Rect(0, 0, self.rect.width, self.rect.height), RED, 10)
+
+        #self.image.fill(bg)
+        self.image.blit(self.text_image, (self.margin_width, self.margin_height))
         self.rel_width  = self.rect.width
         self.rel_height = self.rect.height
 
@@ -145,7 +162,64 @@ class Button(pg.sprite.DirtySprite):
         self.image.blit(self.text_image, (0, 0))
         self.rect  = self.image.get_rect()
         DEBUG(" Exit>>")
- 
+
+    def draw_rounded_rect(self, surface, rect, color, corner_radius):
+        ''' Draw a rectangle with rounded corners.
+        Would prefer this: 
+            pygame.draw.rect(surface, color, rect, border_radius=corner_radius)
+        but this option is not yet supported in my version of pygame so do it ourselves.
+
+        We use anti-aliased circles to make the corners smoother
+        '''
+        if rect.width < 2 * corner_radius or rect.height < 2 * corner_radius:
+            raise ValueError(f"Both height (rect.height) and width (rect.width) must be > 2 * corner radius ({corner_radius})")
+
+        # need to use anti aliasing circle drawing routines to smooth the corners
+        pygame.gfxdraw.aacircle(surface, rect.left+corner_radius, rect.top+corner_radius, corner_radius, color)
+        pygame.gfxdraw.aacircle(surface, rect.right-corner_radius-1, rect.top+corner_radius, corner_radius, color)
+        pygame.gfxdraw.aacircle(surface, rect.left+corner_radius, rect.bottom-corner_radius-1, corner_radius, color)
+        pygame.gfxdraw.aacircle(surface, rect.right-corner_radius-1, rect.bottom-corner_radius-1, corner_radius, color)
+
+        pygame.gfxdraw.filled_circle(surface, rect.left+corner_radius, rect.top+corner_radius, corner_radius, color)
+        pygame.gfxdraw.filled_circle(surface, rect.right-corner_radius-1, rect.top+corner_radius, corner_radius, color)
+        pygame.gfxdraw.filled_circle(surface, rect.left+corner_radius, rect.bottom-corner_radius-1, corner_radius, color)
+        pygame.gfxdraw.filled_circle(surface, rect.right-corner_radius-1, rect.bottom-corner_radius-1, corner_radius, color)
+
+        rect_tmp = pygame.Rect(rect)
+
+        rect_tmp.width -= 2 * corner_radius
+        rect_tmp.center = rect.center
+        pygame.draw.rect(surface, color, rect_tmp)
+
+        rect_tmp.width = rect.width
+        rect_tmp.height -= 2 * corner_radius
+        rect_tmp.center = rect.center
+        pygame.draw.rect(surface, color, rect_tmp)
+
+
+    def draw_bordered_rounded_rect(self, surface, rect, color, border_color, corner_radius, border_thickness):
+        if corner_radius < 0:
+            raise ValueError(f"border radius ({corner_radius}) must be >= 0")
+
+        rect_tmp = pygame.Rect(rect)
+        center = rect_tmp.center
+
+        if border_thickness:
+            if corner_radius <= 0:
+                pygame.draw.rect(surface, border_color, rect_tmp)
+            else:
+                self.draw_rounded_rect(surface, rect_tmp, border_color, corner_radius)
+
+            rect_tmp.inflate_ip(-2*border_thickness, -2*border_thickness)
+            inner_radius = corner_radius - border_thickness + 1
+        else:
+            inner_radius = corner_radius
+
+        if inner_radius <= 0:
+            pygame.draw.rect(surface, color, rect_tmp)
+        else:
+            self.draw_rounded_rect(surface, rect_tmp, color, inner_radius) 
+
     def show(self):
         DEBUG("<< Enter")
         #screen.blit(button1.surface, (self.x, self.y))
@@ -162,16 +236,17 @@ class Button(pg.sprite.DirtySprite):
 
 
 class Board(pg.sprite.DirtySprite):
-    def __init__(self, x, y, width, height):
+    def __init__(self, x, y, width, height, bg=GRAY):
         DEBUG("<< Enter")
         super().__init__()
         #board_img  = pg.image.load('').convert_alpha()
         #board_img2 = pg.image.load('').convert_alpha()
         #self.font = pg.font.SysFont("Arial", 20)
         self.font = pg.font.SysFont("굴림", 20)
+        self.bg = bg
         self.board_img  = pg.Surface((width, height))
         self.board_img2 = pg.Surface((width, height))
-        self.board_img.fill(RED)
+        self.board_img.fill(self.bg)
         self.board_img2.fill(WHITE)
         self.board_imgs = [self.board_img, self.board_img2]
         self.board_index = 0
@@ -251,17 +326,19 @@ class MenuScene(Scene):
         DEBUG("<< Enter")
         DEBUG(">>>>>>>>>>>>>>>> [%s] Scene START >>>>>>>>>>>>>>>>"%(self.name))
         #게임 객체 로딩
-        self.board = Board(0, 0, 400, 200)
-        self.font_board = Board( 722, 2, 300, 500)
-        self.text_box = Label( 0, 0, 300, 500)
-        self.button = Button("Button버튼", (50, 100))
+        self.board = Board(219, 41, 585, 407, DARKOLIVEGREEN)
+        #self.font_board = Board( 722, 2, 300, 500)
+        self.menu_title = Label("메뉴를 선택해 주세요.", (348, 63))
+        self.exit_button = Button("종 료", (447, 348), WHITE)
+        self.play_button = Button("Play", (447, 227), WHITE)
         #그룹분리
         ## 전체 그룹에 추가
         self.allObjGroup = pg.sprite.Group()
         self.allObjGroup.add(self.board)
-        self.allObjGroup.add(self.font_board)
-        self.allObjGroup.add(self.text_box)
-        self.allObjGroup.add(self.button)
+        #self.allObjGroup.add(self.font_board)
+        self.allObjGroup.add(self.menu_title)
+        self.allObjGroup.add(self.exit_button)
+        self.allObjGroup.add(self.play_button)
 
         for font in pg.font.get_fonts():
             INFO(f"font[{font}]")
