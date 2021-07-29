@@ -330,7 +330,7 @@ class MenuScene(Scene):
         #self.font_board = Board( 722, 2, 300, 500)
         self.menu_title = Label("메뉴를 선택해 주세요.", (348, 63))
         self.exit_button = Button("종 료", (447, 348), WHITE)
-        self.play_button = Button("Play", (447, 227), WHITE)
+        self.play_button = Button("PLAY", (447, 227), WHITE)
         #그룹분리
         ## 전체 그룹에 추가
         self.allObjGroup = pg.sprite.Group()
