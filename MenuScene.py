@@ -22,7 +22,21 @@ BODY=10
 EDIT_MODE=True
 #EDIT_MODE=False
 
-class Label(pg.sprite.DirtySprite):
+class UIComponent:
+    def __init__(self, text, pos):
+        DEBUG("<< Enter")
+        self.on_click=None
+        DEBUG(" Exit>>")
+
+    def onClick(self, event):
+        DEBUG("<< Enter")
+        DEBUG(" Exit>>")
+
+    def onOver(self, event):
+        DEBUG("<< Enter")
+        DEBUG(" Exit>>")
+
+class Label(pg.sprite.DirtySprite, UIComponent):
     def __init__(self, text, pos):
         DEBUG("<< Enter")
         super().__init__()
@@ -149,6 +163,19 @@ class Button(pg.sprite.DirtySprite):
         #self.change_text(text, bg)
         DEBUG(" Exit>>")
 
+
+    def onClick(self, event):
+        DEBUG("<< Enter")
+        x, y = pg.mouse.get_pos()
+        if event.type == pg.MOUSEBUTTONDOWN:
+            if pg.mouse.get_pressed()[0]:
+                if self.rect.collidepoint(x, y):
+                    '''
+                    버튼 클릭되었음
+                    '''
+                    self.change_text(self.feedback, bg="blue")
+        DEBUG(" Exit>>")
+
     def change_text(self, text, bg="black"):
         DEBUG("<< Enter")
         """Change the text when you click"""
@@ -225,15 +252,6 @@ class Button(pg.sprite.DirtySprite):
         #screen.blit(button1.surface, (self.x, self.y))
         DEBUG(" Exit>>")
  
-    def click(self, event):
-        DEBUG("<< Enter")
-        x, y = pg.mouse.get_pos()
-        if event.type == pg.MOUSEBUTTONDOWN:
-            if pg.mouse.get_pressed()[0]:
-                if self.rect.collidepoint(x, y):
-                    self.change_text(self.feedback, bg="blue")
-        DEBUG(" Exit>>")
-
 
 class Board(pg.sprite.DirtySprite):
     def __init__(self, x, y, width, height, bg=GRAY):
@@ -435,6 +453,7 @@ class MenuScene(Scene):
                             if self.drag_object != None:
                                 INFO(f"self.drag_object.rect.pos=[ {self.drag_object.rect.x}, {self.drag_object.rect.y} ]")
                                 INFO(f"self.drag_object.rect.size=[ {self.drag_object.rect.width}, {self.drag_object.rect.height} ]")
+                                self.drag_object.onClick(event.pos)
                             self.drag_object = None
                             self.linedrag_mode = None
 
@@ -618,6 +637,7 @@ class MenuScene(Scene):
             self.gamepad.fill(WHITE)
             # 배경 그리기
             self.bg.update(self.gamepad)
+            # 객체 이벤트 처리
             # 객체 그리기
             self.allObjGroup.draw(self.gamepad)
             self.allObjGroup.update()
