@@ -231,7 +231,7 @@ class Button(pg.sprite.DirtySprite):
         if event.type == pg.MOUSEBUTTONDOWN:
             if pg.mouse.get_pressed()[0]:
                 if self.rect.collidepoint(x, y):
-                    self.change_text(self.feedback, bg="blue")
+                    self.change_text(self.feedback, bg="red")
         DEBUG(" Exit>>")
 
 
@@ -327,17 +327,15 @@ class MenuScene(Scene):
         DEBUG(">>>>>>>>>>>>>>>> [%s] Scene START >>>>>>>>>>>>>>>>"%(self.name))
         #게임 객체 로딩
         self.board = Board(219, 41, 585, 407, DARKOLIVEGREEN)
+        #self.font_board = Board( 722, 2, 300, 500)
         self.menu_title = Label("메뉴를 선택해 주세요.", (348, 63))
         self.exit_button = Button("종 료", (447, 348), WHITE)
         self.play_button = Button("PLAY", (447, 227), WHITE)
-        # 정렬
-        self.menu_title.rect.centerx = self.board.rect.centerx
-        self.exit_button.rect.centerx = self.board.rect.centerx
-        self.menu_title.rect.centerx = self.board.rect.centerx
         #그룹분리
         ## 전체 그룹에 추가
         self.allObjGroup = pg.sprite.Group()
         self.allObjGroup.add(self.board)
+        #self.allObjGroup.add(self.font_board)
         self.allObjGroup.add(self.menu_title)
         self.allObjGroup.add(self.exit_button)
         self.allObjGroup.add(self.play_button)
@@ -378,9 +376,6 @@ class MenuScene(Scene):
             for event in pg.event.get():
                 if event.type == pg.QUIT:
                     OnGoing = False
-                if event.type == pg.KEYDOWN:
-                    if event.key == pg.K_ESCAPE:
-                        OnGoing = False
 
                 if not EDIT_MODE:
                     INFO("RUNNING Mode")
