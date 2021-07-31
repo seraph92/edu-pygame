@@ -190,6 +190,7 @@ class Button(pg.sprite.DirtySprite, UIComponent):
         if self.rect.collidepoint(pg.mouse.get_pos()):
             if pg.mouse.get_pressed() == (1, 0, 0):
                 INFO(f"[{self.get_ou_id()}-Button]Mouse Button pressed!! ")
+                INFO(f"[{self.get_ou_id()}-self.on_click[{self.on_click}] ")
                 if self.on_click != None:
                     INFO(f"[{self.get_ou_id()}]self.on_click()")
                     self.on_click()
@@ -204,7 +205,7 @@ class Button(pg.sprite.DirtySprite, UIComponent):
 
     def setOnClick(self, f):
         DEBUG("<< Enter")
-        INFO("on_cick_assign")
+        INFO(f"on_cick_assign = [{f}]")
         self.on_click = f
         DEBUG(" Exit>>")
 
@@ -378,6 +379,10 @@ class MenuScene(Scene):
         self.nextScene = ""
         self.onGoing = False
 
+    def gotoStage1(self):
+        self.nextScene = "Stage1"
+        self.onGoing = False
+
     def start(self):
         DEBUG("<< Enter")
         DEBUG(">>>>>>>>>>>>>>>> [%s] Scene START >>>>>>>>>>>>>>>>"%(self.name))
@@ -402,7 +407,8 @@ class MenuScene(Scene):
         #self.allObjGroup.add(self.exit_button)
         #self.allObjGroup.add(self.play_button)
 
-        self.exit_button.setOnClick(self.quit())
+        self.exit_button.setOnClick(self.quit)
+        self.play_button.setOnClick(self.gotoStage1)
 
         #for font in pg.font.get_fonts():
         #    INFO(f"font[{font}]")
@@ -413,6 +419,7 @@ class MenuScene(Scene):
         self.bg = MenuBackground()
         #Event Loop 진입
         self.nextScene = self.event_loop()
+        INFO(f"self.nextScene = [{self.nextScene}]")
         DEBUG(" Exit>>")
         return self.nextScene
 
