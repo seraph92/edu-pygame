@@ -19,14 +19,29 @@ TOP=7
 BOTTOM=8
 BODY=10
 
-EDIT_MODE=True
-#EDIT_MODE=False
+#EDIT_MODE=True
+EDIT_MODE=False
 
 class UIComponent:
-    def __init__(self, text, pos):
+    seed = 100
+
+    def __init__(self):
         DEBUG("<< Enter")
+        INFO("UIComponent init")
+        # 일련번호 할당
+        self.__ou_id = UIComponent.__gen_id__()
+        INFO(f"__ou_id = {self.__ou_id}")
         self.on_click=None
         DEBUG(" Exit>>")
+
+    def get_ou_id(self):
+        return self.__ou_id
+
+    @classmethod
+    def __gen_id__(cls):
+        cls.seed = cls.seed + 1
+        return cls.seed
+
 
     def onClick(self, event):
         DEBUG("<< Enter")
@@ -40,6 +55,7 @@ class Label(pg.sprite.DirtySprite, UIComponent):
     def __init__(self, text, pos):
         DEBUG("<< Enter")
         super().__init__()
+        UIComponent.__init__(self)
         self.text = text
         self.font_name = "malgungothic"
         self.font_size = 30
@@ -120,10 +136,14 @@ class Label(pg.sprite.DirtySprite, UIComponent):
         self.board_animation()
         DEBUG(" Exit>>")
 
-class Button(pg.sprite.DirtySprite):
-    def __init__(self, text,  pos, bg="black", feedback=""):
+class Button(pg.sprite.DirtySprite, UIComponent):
+    def __init__(self, text,  pos, bg="black", action=None):
         DEBUG("<< Enter")
+        INFO("Button init")
         super().__init__()
+        UIComponent.__init__(self)
+        self.on_click = None
+        self.all_group = None
         self.text = text
         self.font_name = "malgungothic"
         self.font_size = 30
@@ -156,24 +176,36 @@ class Button(pg.sprite.DirtySprite):
         self.rel_width  = self.rect.width
         self.rel_height = self.rect.height
 
-        if feedback == "":
-            self.feedback = "text"
-        else:
-            self.feedback = feedback
         #self.change_text(text, bg)
         DEBUG(" Exit>>")
 
+    def add(self, group):
+        super().add(group)
+        if self.all_group == None:
+            self.all_group = group
 
-    def onClick(self, event):
+    def handle_input(self):
         DEBUG("<< Enter")
-        x, y = pg.mouse.get_pos()
-        if event.type == pg.MOUSEBUTTONDOWN:
-            if pg.mouse.get_pressed()[0]:
-                if self.rect.collidepoint(x, y):
-                    '''
-                    버튼 클릭되었음
-                    '''
-                    self.change_text(self.feedback, bg="blue")
+        keys = pg.key.get_pressed()
+        if self.rect.collidepoint(pg.mouse.get_pos()):
+            if pg.mouse.get_pressed() == (1, 0, 0):
+                INFO(f"[{self.get_ou_id()}-Button]Mouse Button pressed!! ")
+                if self.on_click != None:
+                    INFO(f"[{self.get_ou_id()}]self.on_click()")
+                    self.on_click()
+            if keys[pg.K_SPACE]:
+                INFO("Space key pressed!! ")
+        DEBUG(" Exit>>")
+
+    def update(self):
+        DEBUG("<< Enter")
+        #self.handle_input()
+        DEBUG(" Exit>>")
+
+    def setOnClick(self, f):
+        DEBUG("<< Enter")
+        INFO("on_cick_assign")
+        self.on_click = f
         DEBUG(" Exit>>")
 
     def change_text(self, text, bg="black"):
@@ -253,10 +285,11 @@ class Button(pg.sprite.DirtySprite):
         DEBUG(" Exit>>")
  
 
-class Board(pg.sprite.DirtySprite):
+class Board(pg.sprite.DirtySprite, UIComponent):
     def __init__(self, x, y, width, height, bg=GRAY):
         DEBUG("<< Enter")
         super().__init__()
+        UIComponent.__init__(self)
         #board_img  = pg.image.load('').convert_alpha()
         #board_img2 = pg.image.load('').convert_alpha()
         #self.font = pg.font.SysFont("Arial", 20)
@@ -298,12 +331,12 @@ class Board(pg.sprite.DirtySprite):
         self.rect  = self.image.get_rect(topleft = (x, y))
         DEBUG(" Exit>>")
 
-    def board_input(self):
+    def handle_input(self):
         DEBUG("<< Enter")
         keys = pg.key.get_pressed()
         if self.rect.collidepoint(pg.mouse.get_pos()):
             if pg.mouse.get_pressed() == (1, 0, 0):
-                INFO("Mouse Button pressed!! ")
+                INFO(f"[{self.get_ou_id()}-Board]Mouse Button pressed!! ")
             if keys[pg.K_SPACE]:
                 INFO("Space key pressed!! ")
         DEBUG(" Exit>>")
@@ -319,7 +352,7 @@ class Board(pg.sprite.DirtySprite):
     def update(self):
         DEBUG("<< Enter")
         self.dirty = 1
-        self.board_input()
+        #self.handle_input()
         self.apply_shadow()
         self.board_animation()
         DEBUG(" Exit>>")
@@ -334,11 +367,16 @@ class MenuScene(Scene):
         self.nextScene = ""
         self.rectangle_draging = None
         self.linedrag_mode = None
+        self.onGoing = True
         #Background 로딩
         #self.bg = SlideLeftBackground()
         #Clock 초기화
         self.clock = pg.time.Clock()
         DEBUG(" Exit>>")
+
+    def quit(self):
+        self.nextScene = ""
+        self.onGoing = False
 
     def start(self):
         DEBUG("<< Enter")
@@ -355,13 +393,19 @@ class MenuScene(Scene):
         #그룹분리
         ## 전체 그룹에 추가
         self.allObjGroup = pg.sprite.Group()
-        self.allObjGroup.add(self.board)
-        self.allObjGroup.add(self.menu_title)
-        self.allObjGroup.add(self.exit_button)
-        self.allObjGroup.add(self.play_button)
+        self.board.add(self.allObjGroup)
+        self.menu_title.add(self.allObjGroup)
+        self.exit_button.add(self.allObjGroup)
+        self.play_button.add(self.allObjGroup)
+        #self.allObjGroup.add(self.board)
+        #self.allObjGroup.add(self.menu_title)
+        #self.allObjGroup.add(self.exit_button)
+        #self.allObjGroup.add(self.play_button)
 
-        for font in pg.font.get_fonts():
-            INFO(f"font[{font}]")
+        self.exit_button.setOnClick(self.quit())
+
+        #for font in pg.font.get_fonts():
+        #    INFO(f"font[{font}]")
             #self.font_board.font = font
             #self.font_board.change_text(f"[{font}]ABCabc가나다")
         #self.menu = pg.sprite.Group()
@@ -391,17 +435,31 @@ class MenuScene(Scene):
         '''
 
         DEBUG("<< Enter")
-        OnGoing = True
-        while OnGoing:
+        self.onGoing = True
+        while self.onGoing:
             for event in pg.event.get():
                 if event.type == pg.QUIT:
-                    OnGoing = False
+                    self.onGoing = False
                 if event.type == pg.KEYDOWN:
                     if event.key == pg.K_ESCAPE:
-                        OnGoing = False
+                        self.onGoing = False
 
                 if not EDIT_MODE:
                     INFO("RUNNING Mode")
+                    if event.type == pg.MOUSEBUTTONDOWN:
+                        INFO("MOUSEBOTTONDOWN")
+                        if event.button == 1:            
+                            sprites = self.allObjGroup.sprites()
+                            for sprite in reversed(sprites):
+                                INFO("sprite founded!!")
+                                INFO("sprite.rect = [{}]".format(sprite.rect))
+                                INFO("eventpos = [{}]".format(event.pos))
+                                if sprite.rect.collidepoint(event.pos):
+                                    INFO("collision!!")
+                                    self.drag_object = sprite
+                                    break
+                            self.drag_object.handle_input()
+ 
                 else:
                     if event.type == pg.MOUSEBUTTONDOWN:
                         INFO("MOUSEBOTTONDOWN")
@@ -629,7 +687,7 @@ class MenuScene(Scene):
                     #    DEBUG("event.type=[%d], event.key=[%d]"%(event.type, event.key))
                         #키보드 제어권 전달
                     #    if event.key == pg.K_SPACE:
-                    #        OnGoing = False
+                    #        self.onGoing = False
 
                     #if event.type == pg.MOUSEBUTTONDOWN:
                     #    INFO("event.type=[%d], event.key=[%d]"%(event.type, event.key))
