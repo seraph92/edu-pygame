@@ -375,13 +375,17 @@ class MenuScene(Scene):
         self.clock = pg.time.Clock()
         DEBUG(" Exit>>")
 
-    def quit(self):
-        self.nextScene = ""
-        self.onGoing = False
+    def gotoStage(self, stage, onGoing):
+        self.nextScene = stage
+        self.onGoing = onGoing
 
-    def gotoStage1(self):
-        self.nextScene = "Stage1"
-        self.onGoing = False
+##    def quit(self):
+##        self.nextScene = ""
+##        self.onGoing = False
+##
+##    def gotoStage1(self):
+##        self.nextScene = "Stage1"
+##        self.onGoing = False
 
     def start(self):
         DEBUG("<< Enter")
@@ -407,8 +411,11 @@ class MenuScene(Scene):
         #self.allObjGroup.add(self.exit_button)
         #self.allObjGroup.add(self.play_button)
 
-        self.exit_button.setOnClick(self.quit)
-        self.play_button.setOnClick(self.gotoStage1)
+        #self.exit_button.setOnClick(self.quit)
+        #self.play_button.setOnClick(self.gotoStage1)
+        self.exit_button.setOnClick(lambda stage="", onGoing=False : self.gotoStage(stage, onGoing))
+        self.play_button.setOnClick(lambda stage="Stage1", onGoing=False : self.gotoStage(stage, onGoing))
+        
 
         #for font in pg.font.get_fonts():
         #    INFO(f"font[{font}]")
