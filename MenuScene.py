@@ -423,7 +423,7 @@ class MenuScene(Scene):
             #self.font_board.change_text(f"[{font}]ABCabc가나다")
         #self.menu = pg.sprite.Group()
         #Background 로딩
-        self.bg = MenuBackground()
+        self.bg = StaticBackground()
         #Event Loop 진입
         self.nextScene = self.event_loop()
         INFO(f"self.nextScene = [{self.nextScene}]")

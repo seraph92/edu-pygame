@@ -55,16 +55,17 @@ class Background:
         DEBUG(" Exit>>")
         return ""
 
-class MenuBackground(Background):
+#class MenuBackground(Background):
+class StaticBackground(Background):
     '''
-    Menu Background
+    Static Background
     '''
  
-    def __init__(self):
+    def __init__(self, image_name = "menu"):
         DEBUG("<< Enter")
         self.__background = []
         Background.__init__(self)
-        bgImage = BackgroundImage("menu")
+        bgImage = BackgroundImage(image_name)
         self.addBackgroundImage(bgImage)
 
         menu_back = self.getBackground(0)
@@ -92,7 +93,7 @@ class MenuBackground(Background):
 
     def applyMove(self):
         DEBUG("<< Enter")
-        DEBUG("Menu Screen don't move!!")
+        DEBUG("Static Screen don't move!!")
         # move all background
         # check recycle background
         DEBUG(" Exit>>")

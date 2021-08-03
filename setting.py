@@ -9,10 +9,12 @@ IMG_PATH="images"
 BG_IMG_FILE={
     "background" : "background512.png",
     "menu"       : "menu512.png",
+    "space"       : "game_bg_space_1536x2048.jpg",
 }
 
 OBJ_IMG_FILE={
     "aircraft"  : "plane.png",
+    "spaceship"  : "plane.png",
     "bat"       : "bat.png",
     "fireball"  : "fireball.png",
     "fireball2" : "fireball2.png",
