@@ -14,7 +14,7 @@ BG_IMG_FILE={
 
 OBJ_IMG_FILE={
     "aircraft"  : "plane.png",
-    "spaceship"  : "plane.png",
+    "spaceship"  : "game_object_m1_outline_white.png",
     "bat"       : "bat.png",
     "fireball"  : "fireball.png",
     "fireball2" : "fireball2.png",
