@@ -26,39 +26,89 @@ BODY=10
 EDIT_MODE = False
 
 class AirScraft(pg.sprite.DirtySprite):
-    def __init__(self):
+    def __init__(self, resource_id, size=None):
         DEBUG("<< Enter")
         super().__init__()
-        self.image = pg.image.load(IMG_PATH + '/' + OBJ_IMG_FILE["spaceship"])
-        self.image = self.image.convert_alpha()
+        self.image = pg.image.load(IMG_PATH + '/' + OBJ_IMG_FILE[resource_id])
+        #self.image = self.image.convert_alpha()
         self.rect  = self.image.get_rect()
+
+        if size:
+            INFO("size에 맞게 크기 조절")
+            INFO(f"size = [{size}]")
+            INFO(f"rect = [{self.rect.width}, {self.rect.height}]")
+            # Get Ratio
+            #ratio = self.rect.height / self.rect.width   ### height / width
+            candidates = []
+            #candidates.append((size[0], size[1] * ratio))
+            #candidates.append((size[0] / ratio, size[1]))
+            candidates.append((size[0], size[1] * self.rect.height // self.rect.width))
+            candidates.append((size[0] * self.rect.width // self.rect.height, size[1]))
+
+            for candi in candidates:
+                INFO(f"candi = [{candi}]")
+                INFO(f"candi(int) = [{int(candi[0])}, {int(candi[1])}")
+                if candi[0] <= size[0] and candi[1] <= size[1]:
+                    self.image = pg.transform.scale(self.image, (int(candi[0]), int(candi[1])))
+                    self.rect = self.image.get_rect()
+                    break
+
+        self.x = 0
+        self.y = 0
         DEBUG(" Exit>>")
 
-    def board_input(self):
+    def handle_input(self):
         DEBUG("<< Enter")
         keys = pg.key.get_pressed()
-        if self.rect.collidepoint(pg.mouse.get_pos()):
-            if pg.mouse.get_pressed() == (1, 0, 0):
-                INFO("Mouse Button pressed!! ")
-                self.change_text("마우스 눌렀어.")
-            if keys[pg.K_SPACE]:
-                INFO("Space key pressed!! ")
+        if keys:
+            if keys[pg.K_UP] or keys[pg.K_w]:
+                INFO("key up pressed!! ")
+                self.y -= 5
+            if keys[pg.K_DOWN] or keys[pg.K_s]:
+                INFO("key down pressed!! ")
+                self.y += 5
+            if keys[pg.K_LEFT] or keys[pg.K_a]:
+                INFO("key left pressed!! ")
+                self.x -= 5
+            if keys[pg.K_RIGHT] or keys[pg.K_d]:
+                INFO("key right pressed!! ")
+                self.x += 5
+            if keys[pg.K_z] or keys[pg.K_PERIOD]:
+                INFO("key [Fire] pressed!! ")
+                ## Fire
+                # sound effect
+                # bullet object create
+            if keys[pg.K_x] or keys[pg.K_SLASH]:
+                INFO("key [Misile] pressed!! ")
+                ## Fire
+                # sound effect
+                # Misile object create
+            #else:
+            #    INFO(f"key [{keys}] pressed!! ")
+        #keys = pg.key.get_pressed()
+        #if self.rect.collidepoint(pg.mouse.get_pos()):
+        #    if pg.mouse.get_pressed() == (1, 0, 0):
+        #        INFO("Mouse Button pressed!! ")
+        #        self.change_text("마우스 눌렀어.")
+        #    if keys[pg.K_SPACE]:
+        #        INFO("Space key pressed!! ")
         DEBUG(" Exit>>")
 
-    def apply_shadow(self):
+    def apply_position(self):
         DEBUG("<< Enter")
+        self.rect.centerx, self.rect.centery = self.x, self.y
         DEBUG(" Exit>>")
 
-    def board_animation(self):
+    def animation(self):
         DEBUG("<< Enter")
         DEBUG(" Exit>>")
 
     def update(self):
         DEBUG("<< Enter")
         self.dirty = 1
-        self.board_input()
-        self.apply_shadow()
-        self.board_animation()
+        self.handle_input()
+        self.apply_position()
+        self.animation()
         DEBUG(" Exit>>")
 
 class ShootingScene(Scene):
@@ -85,6 +135,9 @@ class ShootingScene(Scene):
         DEBUG("<< Enter")
         DEBUG(">>>>>>>>>>>>>>>> [%s] Scene START >>>>>>>>>>>>>>>>"%(self.name))
         #게임 객체 로딩
+        air_craft = AirScraft("spaceship", (GAME_SCREEN[1]/8, GAME_SCREEN[0]/8))
+        self.player = pg.sprite.GroupSingle()
+        air_craft.add(self.player)
 #        self.board = Board(219, 41, 585, 407, DARKOLIVEGREEN)
 #        self.menu_title = Label("메뉴를 선택해 주세요.", (348, 63))
 #        self.exit_button = Button("종 료", (447, 348), WHITE)
@@ -95,7 +148,7 @@ class ShootingScene(Scene):
 #        self.menu_title.rect.centerx = self.board.rect.centerx
         #그룹분리
         ## 전체 그룹에 추가
-#        self.allObjGroup = pg.sprite.Group()
+        self.allObjGroup = pg.sprite.Group()
 #        self.board.add(self.allObjGroup)
 #        self.menu_title.add(self.allObjGroup)
 #        self.exit_button.add(self.allObjGroup)
@@ -159,7 +212,7 @@ class ShootingScene(Scene):
                                     INFO("collision!!")
                                     self.drag_object = sprite
                                     break
-                            self.drag_object.handle_input()
+                            #self.drag_object.handle_input()
  
                 else:
                     if event.type == pg.MOUSEBUTTONDOWN:
@@ -400,6 +453,9 @@ class ShootingScene(Scene):
             # 객체 그리기
             self.allObjGroup.draw(self.gamepad)
             self.allObjGroup.update()
+
+            self.player.draw(self.gamepad)
+            self.player.update()
             # 디스플레이 업데이트
             pg.display.update()
             # refresh rate 보정
