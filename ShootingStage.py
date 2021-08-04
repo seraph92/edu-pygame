@@ -25,6 +25,76 @@ BODY=10
 
 EDIT_MODE = False
 
+class Projectile(pg.sprite.DirtySprite):
+    def __init__(self, resource_id, size=None, owner=None):
+        DEBUG("<< Enter")
+        super().__init__()
+        self.owner = owner
+        self.image = pg.image.load(IMG_PATH + '/' + OBJ_IMG_FILE[resource_id])
+        #self.image = self.image.convert_alpha()
+        self.rect  = self.image.get_rect()
+        self.play_rect = None
+        self.weapon_group = None
+
+        if size:
+            INFO("size에 맞게 크기 조절")
+            INFO(f"size = [{size}]")
+            INFO(f"rect = [{self.rect.width}, {self.rect.height}]")
+            # Get Ratio
+            candidates = []
+            candidates.append((size[0], size[1] * self.rect.height // self.rect.width))
+            candidates.append((size[0] * self.rect.width // self.rect.height, size[1]))
+
+            for candi in candidates:
+                INFO(f"candi = [{candi}]")
+                INFO(f"candi(int) = [{int(candi[0])}, {int(candi[1])}")
+                if candi[0] <= size[0] and candi[1] <= size[1]:
+                    self.image = pg.transform.scale(self.image, (int(candi[0]), int(candi[1])))
+                    self.rect = self.image.get_rect()
+                    break
+
+        self.x = 0
+        self.y = 0
+        DEBUG(" Exit>>")
+
+    def set_play_rect(self, rect):
+        self.play_rect = rect
+
+    def set_weapon_group(self, weapon_group):
+        self.weapon_group = weapon_group
+
+    def handle_input(self):
+        DEBUG("<< Enter")
+        DEBUG(" Exit>>")
+
+    def move_xy(self, x, y):
+        DEBUG("<< Enter")
+        self.x = x
+        self.y = y
+        DEBUG(" Exit>>")
+
+    def apply_position(self):
+        DEBUG("<< Enter")
+        self.rect.centerx, self.rect.centery = self.x, self.y
+
+        # 스크린 밖으로 나가면 제거
+        if not pg.Rect(0, 0, GAME_SCREEN[0], GAME_SCREEN[1]).colliderect(self.rect):
+            self.kill()
+            INFO(f"Projectile Object Removed!!")
+        DEBUG(" Exit>>")
+
+    def animation(self):
+        DEBUG("<< Enter")
+        self.y -= 15
+        DEBUG(" Exit>>")
+
+    def update(self):
+        DEBUG("<< Enter")
+        self.dirty = 1
+        self.apply_position()
+        self.animation()
+        DEBUG(" Exit>>")
+
 class AirScraft(pg.sprite.DirtySprite):
     def __init__(self, resource_id, size=None):
         DEBUG("<< Enter")
@@ -33,6 +103,8 @@ class AirScraft(pg.sprite.DirtySprite):
         #self.image = self.image.convert_alpha()
         self.rect  = self.image.get_rect()
         self.play_rect = None
+        self.weapon_group = None
+        self.projectiles = []
 
         if size:
             INFO("size에 맞게 크기 조절")
@@ -60,6 +132,9 @@ class AirScraft(pg.sprite.DirtySprite):
 
     def set_play_rect(self, rect):
         self.play_rect = rect
+
+    def set_weapon_group(self, weapon_group):
+        self.weapon_group = weapon_group
 
     def handle_input(self):
         DEBUG("<< Enter")
@@ -101,6 +176,11 @@ class AirScraft(pg.sprite.DirtySprite):
                 ## Fire
                 # sound effect
                 # bullet object create
+                projectile = Projectile("beam_lv1", owner=self)
+                self.projectiles.append(projectile)
+                projectile.move_xy(self.x, self.rect.top - 5)
+                projectile.add(self.weapon_group)
+
             if keys[pg.K_x] or keys[pg.K_SLASH]:
                 INFO("key [Misile] pressed!! ")
                 ## Fire
@@ -204,13 +284,21 @@ class ShootingScene(Scene):
         INFO(f"**self.play_rect = [{self.play_rect}]")
 
         #게임 객체 로딩
+        ## Group 생성
+        self.playerG = pg.sprite.GroupSingle()
+        self.weaponG = pg.sprite.Group()
+        self.enemyG  = pg.sprite.Group()
+        ## Player Object
         #air_craft = AirScraft("spaceship", (PLAY_AREA[1]/8, PLAY_AREA[0]/8))
         air_craft = AirScraft("spaceship", (playground_height/8, playground_width/8))
         air_craft.set_play_rect(self.play_rect)
+        air_craft.set_weapon_group(self.weaponG)
         air_craft.move_xy(self.play_rect.centerx, self.play_rect.bottom - 50)
 
-        self.player = pg.sprite.GroupSingle()
-        air_craft.add(self.player)
+        air_craft.add(self.playerG)
+        ## Projectile Object
+
+        ## Enemy Object
 
         #그룹분리
         ## 전체 그룹에 추가
@@ -508,9 +596,11 @@ class ShootingScene(Scene):
             self.allObjGroup.draw(self.gamepad)
             self.allObjGroup.update()
 
-            self.player.draw(self.gamepad)
-            self.player.update()
+            self.playerG.draw(self.gamepad)
+            self.playerG.update()
 
+            self.weaponG.draw(self.gamepad)
+            self.weaponG.update()
 
             # 디스플레이 업데이트
             pg.display.update()

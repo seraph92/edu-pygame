@@ -22,6 +22,7 @@ OBJ_IMG_FILE={
     "fireball2" : "fireball2.png",
     "boom"      : "boom.png",
     "bullet"    : "bullet.png",
+    "beam_lv1"  : "beam_r7_bn.png",
 }
 
 SND_PATH="sounds"
