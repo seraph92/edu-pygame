@@ -1,5 +1,7 @@
 GAME_TITLE = "Shooting Game"
 GAME_SCREEN = (1024, 768)
+# 7: 9
+PLAY_AREA   = (int(GAME_SCREEN[1]*7/9), GAME_SCREEN[1])
 
 
 REFRESH_RATE = 60

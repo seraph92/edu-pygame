@@ -32,6 +32,7 @@ class AirScraft(pg.sprite.DirtySprite):
         self.image = pg.image.load(IMG_PATH + '/' + OBJ_IMG_FILE[resource_id])
         #self.image = self.image.convert_alpha()
         self.rect  = self.image.get_rect()
+        self.play_rect = None
 
         if size:
             INFO("size에 맞게 크기 조절")
@@ -57,6 +58,9 @@ class AirScraft(pg.sprite.DirtySprite):
         self.y = 0
         DEBUG(" Exit>>")
 
+    def set_play_rect(self, rect):
+        self.play_rect = rect
+
     def handle_input(self):
         DEBUG("<< Enter")
         keys = pg.key.get_pressed()
@@ -64,15 +68,34 @@ class AirScraft(pg.sprite.DirtySprite):
             if keys[pg.K_UP] or keys[pg.K_w]:
                 INFO("key up pressed!! ")
                 self.y -= 5
+                if self.play_rect:
+                    if self.y < self.play_rect.y:
+                        self.y = self.play_rect.y
+
             if keys[pg.K_DOWN] or keys[pg.K_s]:
                 INFO("key down pressed!! ")
                 self.y += 5
+                if self.play_rect:
+                    if self.y + self.rect.height/2 > self.play_rect.y + self.play_rect.height:
+                        self.y = -self.rect.height/2 + self.play_rect.y + self.play_rect.height
+
             if keys[pg.K_LEFT] or keys[pg.K_a]:
                 INFO("key left pressed!! ")
                 self.x -= 5
+                if self.play_rect:
+                    if self.x < self.play_rect.x:
+                        self.x = self.play_rect.x
+
             if keys[pg.K_RIGHT] or keys[pg.K_d]:
                 INFO("key right pressed!! ")
                 self.x += 5
+                if self.play_rect:
+                    if self.x  > self.play_rect.x + self.play_rect.width:
+                        self.x = self.play_rect.x + self.play_rect.width
+
+                    #if self.x + self.rect.width > self.play_rect.x + self.play_rect.width:
+                    #    self.x = -self.rect.width + self.play_rect.x + self.play_rect.width
+
             if keys[pg.K_z] or keys[pg.K_PERIOD]:
                 INFO("key [Fire] pressed!! ")
                 ## Fire
@@ -92,6 +115,12 @@ class AirScraft(pg.sprite.DirtySprite):
         #        self.change_text("마우스 눌렀어.")
         #    if keys[pg.K_SPACE]:
         #        INFO("Space key pressed!! ")
+        DEBUG(" Exit>>")
+
+    def move_xy(self, x, y):
+        DEBUG("<< Enter")
+        self.x = x
+        self.y = y
         DEBUG(" Exit>>")
 
     def apply_position(self):
@@ -121,6 +150,7 @@ class ShootingScene(Scene):
         self.rectangle_draging = None
         self.linedrag_mode = None
         self.onGoing = True
+
         #Background 로딩
         #self.bg = SlideLeftBackground()
         #Clock 초기화
@@ -134,10 +164,6 @@ class ShootingScene(Scene):
     def start(self):
         DEBUG("<< Enter")
         DEBUG(">>>>>>>>>>>>>>>> [%s] Scene START >>>>>>>>>>>>>>>>"%(self.name))
-        #게임 객체 로딩
-        air_craft = AirScraft("spaceship", (GAME_SCREEN[1]/8, GAME_SCREEN[0]/8))
-        self.player = pg.sprite.GroupSingle()
-        air_craft.add(self.player)
 #        self.board = Board(219, 41, 585, 407, DARKOLIVEGREEN)
 #        self.menu_title = Label("메뉴를 선택해 주세요.", (348, 63))
 #        self.exit_button = Button("종 료", (447, 348), WHITE)
@@ -146,9 +172,6 @@ class ShootingScene(Scene):
 #        self.menu_title.rect.centerx = self.board.rect.centerx
 #        self.exit_button.rect.centerx = self.board.rect.centerx
 #        self.menu_title.rect.centerx = self.board.rect.centerx
-        #그룹분리
-        ## 전체 그룹에 추가
-        self.allObjGroup = pg.sprite.Group()
 #        self.board.add(self.allObjGroup)
 #        self.menu_title.add(self.allObjGroup)
 #        self.exit_button.add(self.allObjGroup)
@@ -163,7 +186,36 @@ class ShootingScene(Scene):
         
 
         #Background 로딩
-        self.bg = StaticBackground("space")
+        self.bg = StaticBackground("space", PLAY_AREA)
+
+        playground_width  = PLAY_AREA[0]
+        playground_height = PLAY_AREA[1]
+
+        pad_rect = self.gamepad.get_rect()
+
+        playground_x = int((pad_rect.width  - playground_width ) / 2)
+        playground_y = int((pad_rect.height - playground_height) / 2)
+
+        self.play_rect = pg.Rect(playground_x, playground_y, playground_width, playground_height)
+        INFO(f"**playground_x = [{playground_x}]")
+        INFO(f"**playground_y = [{playground_y}]")
+        INFO(f"**playground_width  = [{playground_width}]")
+        INFO(f"**playground_height = [{playground_height}]")
+        INFO(f"**self.play_rect = [{self.play_rect}]")
+
+        #게임 객체 로딩
+        #air_craft = AirScraft("spaceship", (PLAY_AREA[1]/8, PLAY_AREA[0]/8))
+        air_craft = AirScraft("spaceship", (playground_height/8, playground_width/8))
+        air_craft.set_play_rect(self.play_rect)
+        air_craft.move_xy(self.play_rect.centerx, self.play_rect.bottom - 50)
+
+        self.player = pg.sprite.GroupSingle()
+        air_craft.add(self.player)
+
+        #그룹분리
+        ## 전체 그룹에 추가
+        self.allObjGroup = pg.sprite.Group()
+
         #Event Loop 진입
         self.nextScene = self.event_loop()
         INFO(f"self.nextScene = [{self.nextScene}]")
@@ -449,6 +501,8 @@ class ShootingScene(Scene):
             self.gamepad.fill(WHITE)
             # 배경 그리기
             self.bg.update(self.gamepad)
+            pygame.draw.line(self.gamepad, RED, (self.play_rect.x, self.play_rect.y) , (self.play_rect.x + self.play_rect.width, self.play_rect.y), 4)
+            #pygame.draw.rect(self.gamepad, RED, self.play_rect)
             # 객체 이벤트 처리
             # 객체 그리기
             self.allObjGroup.draw(self.gamepad)
@@ -456,6 +510,8 @@ class ShootingScene(Scene):
 
             self.player.draw(self.gamepad)
             self.player.update()
+
+
             # 디스플레이 업데이트
             pg.display.update()
             # refresh rate 보정

@@ -10,7 +10,7 @@ class BackgroundImage:
     Background Image
     '''
     #__backObjList: List[pg.Surface] = []
-    def __init__(self, imageId):
+    def __init__(self, imageId, resize=None):
         DEBUG("<< Enter")
         self.__backObjList = []
         self.__image_name = ""
@@ -21,7 +21,13 @@ class BackgroundImage:
 
         DEBUG('BG_IMG_FILE[%s] = [%s]'% (imageId, BG_IMG_FILE[imageId]))
         self.__image_name = BG_IMG_FILE[imageId]
-        self.__backObjList.append(pg.image.load(IMG_PATH + '/' + BG_IMG_FILE[imageId]))
+        tmp_img = pg.image.load(IMG_PATH + '/' + BG_IMG_FILE[imageId])
+        if resize:
+            self.image = pg.transform.scale( tmp_img, (resize[0], resize[1]) )
+        else:
+            self.image = tmp_img
+
+        self.__backObjList.append(self.image)
         self.width  = self.__backObjList[0].get_width()
         self.height = self.__backObjList[0].get_height()
         DEBUG(" Exit>>")
@@ -61,11 +67,13 @@ class StaticBackground(Background):
     Static Background
     '''
  
-    def __init__(self, image_name = "menu"):
+    def __init__(self, imageId = "", resize=None):
         DEBUG("<< Enter")
         self.__background = []
+
         Background.__init__(self)
-        bgImage = BackgroundImage(image_name)
+        bgImage = BackgroundImage(imageId, (resize[0], resize[1]))
+
         self.addBackgroundImage(bgImage)
 
         menu_back = self.getBackground(0)
@@ -103,7 +111,15 @@ class StaticBackground(Background):
         for i, bg in enumerate(self.getBackgrounds()):
             DEBUG("back_obj = [%s]"%(bg.status()))
             back_obj = bg.getImageObj()
-            self.gamepad.blit(back_obj, (0, 0))
+
+            obj_rect = back_obj.get_rect()
+            pad_rect = self.gamepad.get_rect()
+
+            blit_x = int((pad_rect.width  - obj_rect.width ) / 2)
+            blit_y = int((pad_rect.height - obj_rect.height) / 2)
+
+            #self.gamepad.blit(back_obj, (0, 0))
+            self.gamepad.blit(back_obj, (blit_x, blit_y))
         DEBUG(" Exit>>")
 
 
