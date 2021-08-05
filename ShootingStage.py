@@ -105,6 +105,8 @@ class AirScraft(pg.sprite.DirtySprite):
         self.play_rect = None
         self.weapon_group = None
         self.projectiles = []
+        self.fire_delay = 0
+        self.clock = pg.time.Clock()
 
         if size:
             INFO("size에 맞게 크기 조절")
@@ -132,6 +134,9 @@ class AirScraft(pg.sprite.DirtySprite):
 
     def set_play_rect(self, rect):
         self.play_rect = rect
+
+    #def set_clock(self, clock):
+    #    self.clock = clock
 
     def set_weapon_group(self, weapon_group):
         self.weapon_group = weapon_group
@@ -176,10 +181,18 @@ class AirScraft(pg.sprite.DirtySprite):
                 ## Fire
                 # sound effect
                 # bullet object create
-                projectile = Projectile("beam_lv1", owner=self)
-                self.projectiles.append(projectile)
-                projectile.move_xy(self.x, self.rect.top - 5)
-                projectile.add(self.weapon_group)
+                if self.fire_delay > 0:
+                    INFO(f"clock.get_time=[{self.clock.get_time()}]")
+                    self.fire_delay -= self.clock.get_time()
+
+                if self.fire_delay <= 0:
+                    projectile = Projectile("beam_lv1", owner=self)
+                    self.projectiles.append(projectile)
+                    projectile.move_xy(self.x, self.rect.top - 5)
+                    projectile.add(self.weapon_group)
+                    self.fire_delay = 200
+
+                self.clock.tick()
 
             if keys[pg.K_x] or keys[pg.K_SLASH]:
                 INFO("key [Misile] pressed!! ")
@@ -293,6 +306,7 @@ class ShootingScene(Scene):
         air_craft = AirScraft("spaceship", (playground_height/8, playground_width/8))
         air_craft.set_play_rect(self.play_rect)
         air_craft.set_weapon_group(self.weaponG)
+        #air_craft.set_clock(self.clock)
         air_craft.move_xy(self.play_rect.centerx, self.play_rect.bottom - 50)
 
         air_craft.add(self.playerG)
