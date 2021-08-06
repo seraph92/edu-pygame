@@ -96,7 +96,7 @@ class Projectile(pg.sprite.DirtySprite):
         DEBUG(" Exit>>")
 
 class AirScraft(pg.sprite.DirtySprite):
-    def __init__(self, resource_id, size=None):
+    def __init__(self, resource_id, size=None, health=0):
         DEBUG("<< Enter")
         super().__init__()
         self.image = pg.image.load(IMG_PATH + '/' + OBJ_IMG_FILE[resource_id])
@@ -107,6 +107,7 @@ class AirScraft(pg.sprite.DirtySprite):
         self.projectiles = []
         self.fire_delay = 0
         self.clock = pg.time.Clock()
+        self.health = health
 
         if size:
             INFO("size에 맞게 크기 조절")
@@ -233,6 +234,115 @@ class AirScraft(pg.sprite.DirtySprite):
         self.animation()
         DEBUG(" Exit>>")
 
+class EnemyObject(pg.sprite.DirtySprite):
+    def __init__(self, resource_id, size=None, health=0):
+        DEBUG("<< Enter")
+        super().__init__()
+        self.enemy_flag = True
+
+        self.image = pg.image.load(IMG_PATH + '/' + OBJ_IMG_FILE[resource_id])
+
+        #self.image = self.image.convert_alpha()
+        self.rect  = self.image.get_rect()
+        self.play_rect = None
+        self.weapon_group = None
+        self.projectiles = []
+        self.fire_delay = 0
+        self.clock = pg.time.Clock()
+        self.health = health
+        self.state = 0
+        self.state_delay = 0
+
+        if size:
+            INFO("size에 맞게 크기 조절")
+            INFO(f"size = [{size}]")
+            INFO(f"rect = [{self.rect.width}, {self.rect.height}]")
+            # Get Ratio
+            #ratio = self.rect.height / self.rect.width   ### height / width
+            candidates = []
+            #candidates.append((size[0], size[1] * ratio))
+            #candidates.append((size[0] / ratio, size[1]))
+            candidates.append((size[0], size[1] * self.rect.height // self.rect.width))
+            candidates.append((size[0] * self.rect.width // self.rect.height, size[1]))
+
+            for candi in candidates:
+                INFO(f"candi = [{candi}]")
+                INFO(f"candi(int) = [{int(candi[0])}, {int(candi[1])}]")
+                if candi[0] <= size[0] and candi[1] <= size[1]:
+                    if self.enemy_flag:
+                        self.image = pg.transform.rotozoom(self.image, 180, candi[0]/self.rect.width)
+                    else:
+                        self.image = pg.transform.scale(self.image, (int(candi[0]), int(candi[1])))
+                    self.rect = self.image.get_rect()
+                    INFO(f"self.rect = [{self.rect}]")
+                    break
+
+        self.x = 0
+        self.y = 0
+        DEBUG(" Exit>>")
+
+    def set_play_rect(self, rect):
+        self.play_rect = rect
+
+    def set_weapon_group(self, weapon_group):
+        self.weapon_group = weapon_group
+
+    def handle_input(self):
+        DEBUG("<< Enter")
+        ## 적은 input handle이 아니라 적 행동 로직 구현
+        ## 일단 아래로 직진
+        ## 상태변경 해야 하나?
+
+        self.state_delay -= self.clock.get_time()
+        ## State: 탐색 및 목표 위치 설정(0) -> 이동 (1)
+        if self.state == 0:
+            INFO(f"self.state=[{self.state}]")
+            if self.state_delay < 0:
+                self.state = 1
+                self.state_delay = 3000
+            else:
+                INFO(f"self.state_delay=[{self.state_delay}]")
+        else:
+            INFO(f"self.state=[{self.state}]")
+            if self.state_delay < 0:
+                self.state = 0
+                self.state_delay = 3000
+            else:
+                INFO(f"self.state_delay=[{self.state_delay}]")
+
+        self.y += 2
+
+        DEBUG(" Exit>>")
+
+    def move_xy(self, x, y):
+        DEBUG("<< Enter")
+        self.x = x
+        self.y = y
+        DEBUG(" Exit>>")
+
+    def apply_position(self):
+        DEBUG("<< Enter")
+        self.rect.centerx, self.rect.centery = self.x, self.y
+
+        # 스크린 밖으로 나가면 제거
+        if not pg.Rect(-50, -50, GAME_SCREEN[0] + 50, GAME_SCREEN[1] + 50).colliderect(self.rect):
+            self.kill()
+            INFO(f"Projectile Object Removed!!")
+        DEBUG(" Exit>>")
+
+    def animation(self):
+        DEBUG("<< Enter")
+        DEBUG(" Exit>>")
+
+    def update(self):
+        DEBUG("<< Enter")
+        self.dirty = 1
+        self.handle_input()
+        self.apply_position()
+        self.animation()
+        self.clock.tick()
+        DEBUG(" Exit>>")
+
 class ShootingScene(Scene):
     def __init__(self, name, gamepad):
         DEBUG("<< Enter")
@@ -313,6 +423,10 @@ class ShootingScene(Scene):
         ## Projectile Object
 
         ## Enemy Object
+        enemy_object = EnemyObject("ant_lv1", (playground_height/24, playground_width/24))
+        enemy_object.set_play_rect(self.play_rect)
+        enemy_object.move_xy(self.play_rect.centerx, self.play_rect.top - 50)
+        enemy_object.add(self.enemyG)
 
         #그룹분리
         ## 전체 그룹에 추가
@@ -612,6 +726,9 @@ class ShootingScene(Scene):
 
             self.playerG.draw(self.gamepad)
             self.playerG.update()
+
+            self.enemyG.draw(self.gamepad)
+            self.enemyG.update()
 
             self.weaponG.draw(self.gamepad)
             self.weaponG.update()

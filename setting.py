@@ -23,6 +23,8 @@ OBJ_IMG_FILE={
     "boom"      : "boom.png",
     "bullet"    : "bullet.png",
     "beam_lv1"  : "beam_r7_bn.png",
+    "ant_lv1"  : "ant_outline_white.png",
+    #"ant_lv1"  : "ant_outline_black.png",
 }
 
 SND_PATH="sounds"
